@@ -63,24 +63,24 @@ size_t to_buf(const ip_packet_t* packet, uint8_t* buf, size_t buf_len) {
     buf[i++] = packet->type_of_service;
 
     uint16_t total_length = htons(packet->total_length);
-    buf[i++] = (total_length >> 8);
     buf[i++] = (total_length & 0xFF);
+    buf[i++] = (total_length >> 8);
 
     uint16_t identification = htons(packet->identification);
+    buf[i++] = (identification & 0xFF); 
     buf[i++] = (identification >> 8);
-    buf[i++] = (identification & 0x00FF); 
 
     uint16_t flags_fragment = ((packet-> flags & 0x7) << 13) | (packet->fragment_offset & 0x1FFF);
     flags_fragment = htons(flags_fragment);
-    buf[i++] = flags_fragment >> 8;
     buf[i++] = flags_fragment & 0xFF;
+    buf[i++] = flags_fragment >> 8;
 
     buf[i++] = packet->time_to_live;
     buf[i++] = packet->protocol;
 
     uint16_t header_checksum = htons(packet->header_checksum);
+    buf[i++] = (header_checksum & 0xFF); 
     buf[i++] = (header_checksum >> 8);
-    buf[i++] = (header_checksum & 0x00FF); 
 
     uint32_t source_address = htonl(packet->source_address);
     buf[i++] = (source_address >> 24);
