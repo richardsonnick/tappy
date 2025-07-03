@@ -2,6 +2,7 @@
 #define TYPES_H
 
 #include <stdint.h>
+
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
 typedef struct {
     uint8_t version;  // 4 bits
@@ -19,6 +20,19 @@ typedef struct {
     // ...options
     // ...padding
 } ip_packet_t;
+
+typedef struct {
+    uint16_t source_port; // 16 bits
+    uint16_t destination_port; // 16 bits
+    uint32_t sequence_number; // 32 bits
+    uint32_t acknowledgment_number; // 32 bits
+    uint8_t data_offset; // 4 bits
+    uint8_t reserved; // 4 bits
+    uint8_t flags; // aka "control bits". 8 bits
+    uint16_t window; // 16 bits
+    uint16_t checksum; // 16 bits
+    uint16_t urgent_pointer; // 16 bits
+} tcp_packet_t;
 
 typedef struct {
     uint8_t a;
