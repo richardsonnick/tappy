@@ -17,7 +17,7 @@ void client_loop(int netdev_fd) {
         .flags = 0x00,
         .fragment_offset = 0x0000,
         .time_to_live = 0xFF,
-        .protocol = 0x88,
+        .protocol = 0x06, // TCP
         .header_checksum = 0x9898,
         .source_address = to_ip_encoding_decomposed(127,0,0,1),
         .destination_address = to_ip_encoding_decomposed(127,0,0,1),
