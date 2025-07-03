@@ -12,9 +12,8 @@ int main(int argc, char *argv[]){
         printf("Invalid arg len\n");
         return -1;
     }
-    // The kernel will give u a free tun device name automatically.
-    // hence the format string.
-    char dev[IFNAMSIZ] = "tun%d";
+
+    char dev[IFNAMSIZ] = "tun0";
     int fd;
     if ( (fd = tun_alloc(dev)) < 0) {
         printf("Failed to open tun device\n");
