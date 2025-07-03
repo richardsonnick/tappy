@@ -1,1 +1,1 @@
-void server_loop();
+void server_loop(int netdev_fd);

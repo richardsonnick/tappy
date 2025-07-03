@@ -24,7 +24,6 @@ int tun_alloc(char *dev) {
 
     if ( (fd = open("/dev/net/tun", O_RDWR)) < 0) {
         perror("Error opening /dev/net/tun");
-        printf("wtf");
         return -1;
     }
     

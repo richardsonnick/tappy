@@ -1,4 +1,4 @@
-main: utils.o server.o client.o 
+main: clean utils.o server.o client.o 
 	gcc main.c server.o client.o utils.o -I. -o tappy
 
 server.o:
