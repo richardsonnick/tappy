@@ -1,3 +1,6 @@
+#ifndef TYPES_H
+#define TYPES_H
+
 #include <stdint.h>
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
 typedef struct {
@@ -16,3 +19,12 @@ typedef struct {
     // ...options
     // ...padding
 } ip_packet_t;
+
+typedef struct {
+    uint8_t a;
+    uint8_t b;
+    uint8_t c;
+    uint8_t d;
+} ip_addr_t;
+
+#endif

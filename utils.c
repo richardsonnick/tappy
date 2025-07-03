@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <stdio.h>
+#include <arpa/inet.h>
 
 #include "utils.h"
 
@@ -40,4 +41,93 @@ int tun_alloc(char *dev) {
 
     strcpy(dev, ifr.ifr_name);
     return fd;
+}
+
+uint32_t to_ip_encoding_decomposed(const uint8_t a, const uint8_t b, const uint8_t c, const uint8_t d) {
+   return htonl((a << 24) | (b << 16) | (c << 8) | (d));
+}
+
+uint32_t to_ip_encoding(const ip_addr_t* ip_addr) {
+   return htonl((ip_addr->a << 24) | (ip_addr->b << 16) | (ip_addr->c << 8) | (ip_addr->d));
+}
+
+size_t to_buf(const ip_packet_t* packet, uint8_t* buf, size_t buf_len) {
+    // TODO: IDK if this is right...
+    // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
+    if (buf_len < 20) {
+        return -1;
+    }
+
+    uint8_t i = 0;
+    buf[i++] = ((packet->version & 0x0f) << 4) | (packet->ihl & 0x0F);
+    buf[i++] = packet->type_of_service;
+
+    uint16_t total_length = htons(packet->total_length);
+    buf[i++] = (total_length >> 8);
+    buf[i++] = (total_length & 0xFF);
+
+    uint16_t identification = htons(packet->identification);
+    buf[i++] = (identification >> 8);
+    buf[i++] = (identification & 0x00FF); 
+
+    uint16_t flags_fragment = ((packet-> flags & 0x7) << 13) | (packet->fragment_offset & 0x1FFF);
+    flags_fragment = htons(flags_fragment);
+    buf[i++] = flags_fragment >> 8;
+    buf[i++] = flags_fragment & 0xFF;
+
+    buf[i++] = packet->time_to_live;
+    buf[i++] = packet->protocol;
+
+    uint16_t header_checksum = htons(packet->header_checksum);
+    buf[i++] = (header_checksum >> 8);
+    buf[i++] = (header_checksum & 0x00FF); 
+
+    uint32_t source_address = htonl(packet->source_address);
+    buf[i++] = (source_address >> 24);
+    buf[i++] = (source_address >> 16) & 0xFF; 
+    buf[i++] = (source_address >> 8) & 0xFF; 
+    buf[i++] = (source_address & 0x00FF); 
+
+    uint32_t destination_address = htonl(packet->destination_address);
+    buf[i++] = (destination_address >> 24);
+    buf[i++] = (destination_address >> 16) & 0xFF; 
+    buf[i++] = (destination_address >> 8) & 0xFF; 
+    buf[i++] = (destination_address & 0x00FF); 
+
+    return i;
+}
+
+bool to_packet(const uint8_t* buf, size_t len, ip_packet_t* out_packet) {
+    if (len < 20) {
+        return false;
+    }
+    uint8_t i = 0;
+    out_packet->version = (buf[i] >> 4); // version
+    out_packet->ihl = (buf[i] & 0x0F); // ihl
+    i++;
+    out_packet->type_of_service = buf[i++];
+    out_packet->total_length = ((uint16_t)buf[i++] << 8); 
+    out_packet->total_length = (((uint16_t)buf[i++] & 0x00FF) | out_packet->total_length); 
+    out_packet->identification = ((uint16_t)buf[i++] << 8); 
+    out_packet->identification = (((uint16_t)buf[i++] & 0x00FF) | out_packet->identification); 
+
+    uint8_t flag_fragment1 = buf[i++];
+    uint8_t flag_fragment2 = buf[i++];
+    out_packet->flags = (((uint8_t) flag_fragment1 >> 5));
+    out_packet->fragment_offset = (((uint16_t) flag_fragment1 & 0x1F) << 8)
+                                | ((uint16_t) flag_fragment2);
+
+    out_packet->time_to_live = buf[i++];
+    out_packet->protocol = buf[i++];
+    out_packet->header_checksum = ((uint16_t)buf[i++] << 8); 
+    out_packet->header_checksum = (((uint16_t)buf[i++] & 0x00FF) | out_packet->header_checksum); 
+    out_packet->source_address = (((uint32_t) buf[i++]) << 24)
+                                | ((uint32_t) buf[i++] << 16)
+                                | ((uint32_t) buf[i++] << 8)
+                                | ((uint32_t) buf[i++]);
+    out_packet->destination_address = (((uint32_t) buf[i++]) << 24)
+                                | ((uint32_t) buf[i++] << 16)
+                                | ((uint32_t) buf[i++] << 8)
+                                | ((uint32_t) buf[i++]);
+    return true;
 }
