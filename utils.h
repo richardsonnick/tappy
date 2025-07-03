@@ -16,6 +16,7 @@ uint32_t to_ip_encoding_decomposed(const uint8_t a, const uint8_t b, const uint8
  */
 uint32_t to_ip_encoding(const ip_addr_t* ip_addr);
 
+uint16_t compute_checksum(const ip_packet_t* ip_addr);
 size_t to_buf(const ip_packet_t* packet, uint8_t* buf, size_t buf_len);
 bool to_packet(const uint8_t* buf, size_t len, ip_packet_t* out_packet);
 

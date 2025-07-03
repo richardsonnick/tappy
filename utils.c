@@ -51,6 +51,41 @@ uint32_t to_ip_encoding(const ip_addr_t* ip_addr) {
    return htonl((ip_addr->a << 24) | (ip_addr->b << 16) | (ip_addr->c << 8) | (ip_addr->d));
 }
 
+/**
+ * "The checksum field is the 16 bit one's complement of the one's
+ *    complement sum of all 16 bit words in the header.  For purposes of
+ *    computing the checksum, the value of the checksum field is zero."
+ *  https://datatracker.ietf.org/doc/html/rfc791#section-3.1
+ */
+uint16_t compute_checksum(const ip_packet_t* packet) {
+    uint16_t checksum;
+    uint8_t header[20];
+
+    ip_packet_t temp_packet = *packet;
+    temp_packet.header_checksum = 0; // ensure the checksum is set to zero
+
+    to_buf(&temp_packet, header, 20);
+
+    uint32_t sum = 0;
+
+    // Process as 16 bit words
+    for (int i = 0; i < 20; i += 2) {
+        uint16_t word = (header[i] << 8) | header[i + 1];
+        sum += word;
+    }
+
+    // carry bits
+    // Takes bits added that exceed the 16 bit final width
+    // and adds them back to the lower 16 bits.
+    // This is necessary for the "one's complement sum"
+    // https://datatracker.ietf.org/doc/html/rfc1071#section-1
+    while (sum >> 16) {
+        sum = (sum & 0xFFFF) + (sum >> 16);
+    }
+
+    return (uint16_t)(~sum);
+}
+
 size_t to_buf(const ip_packet_t* packet, uint8_t* buf, size_t buf_len) {
     // TODO: IDK if this is right...
     // https://datatracker.ietf.org/doc/html/rfc791#section-3.1

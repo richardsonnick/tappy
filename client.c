@@ -18,10 +18,11 @@ void client_loop(int netdev_fd) {
         .fragment_offset = 0x0000,
         .time_to_live = 0xFF,
         .protocol = 0x06, // TCP
-        .header_checksum = 0x9898,
+        .header_checksum = 0x00,
         .source_address = to_ip_encoding_decomposed(127,0,0,1),
         .destination_address = to_ip_encoding_decomposed(127,0,0,1),
     };
+    packet.header_checksum = compute_checksum(&packet);
     const uint8_t buf_len = 20;
     uint8_t buf[buf_len];
     to_buf(&packet, buf, buf_len);
