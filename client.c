@@ -27,13 +27,10 @@ void client_loop(int netdev_fd) {
     uint8_t buf[buf_len];
     to_buf(&packet, buf, buf_len);
     while (1) {
-    for (int j = 0; j < buf_len; ++j) {
-        printf("%02x ", buf[j]);
-    }
-    printf("\n");
         ssize_t written = write(netdev_fd, buf, buf_len);
         if (written != buf_len) {
             perror("write");
         }
+        sleep(2);
     }
 }
