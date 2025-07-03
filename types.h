@@ -21,6 +21,7 @@ typedef struct {
     // ...padding
 } ip_packet_t;
 
+// https://datatracker.ietf.org/doc/html/rfc9293#section-3.1
 typedef struct {
     uint16_t source_port; // 16 bits
     uint16_t destination_port; // 16 bits
@@ -32,6 +33,8 @@ typedef struct {
     uint16_t window; // 16 bits
     uint16_t checksum; // 16 bits
     uint16_t urgent_pointer; // 16 bits
+    // options...
+    // data...
 } tcp_packet_t;
 
 typedef struct {
