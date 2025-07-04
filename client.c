@@ -10,9 +10,9 @@ void client_loop(int netdev_fd) {
     printf("Running client...\n");
     ip_header_t ip_header = {
         .version = 4,
-        .ihl = 5,
+        .ihl = 5, // header length in 32 bit (4 bytes) words i.e. ihl == 5 implies (5 * 4) 20 byte header
         .type_of_service = 0x66,
-        .total_length = 20,
+        .total_length = 40, // total length of the ip header + payload (tcp packets etc).
         .identification = 0x7777,
         .flags = 0x00,
         .fragment_offset = 0x0000,
