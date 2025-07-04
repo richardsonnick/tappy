@@ -78,19 +78,20 @@ uint32_t to_ip_encoding(const ip_addr_t* ip_addr) {
  *    computing the checksum, the value of the checksum field is zero."
  *  https://datatracker.ietf.org/doc/html/rfc791#section-3.1
  */
-uint16_t compute_checksum(const ip_header_t* packet) {
+uint16_t compute_ip_checksum(const ip_header_t* packet) {
+    const uint8_t header_len = packet->ihl * 4;
     uint16_t checksum;
-    uint8_t header[20];
+    uint8_t header[header_len];
 
     ip_header_t temp_packet = *packet;
     temp_packet.header_checksum = 0; // ensure the checksum is set to zero
 
-    ip_header_to_buf(&temp_packet, header, 20);
+    ip_header_to_buf(&temp_packet, header, header_len);
 
     uint32_t sum = 0;
 
     // Process as 16 bit words
-    for (int i = 0; i < 20; i += 2) {
+    for (int i = 0; i < header_len; i += 2) {
         uint16_t word = (header[i] << 8) | header[i + 1];
         sum += word;
     }
