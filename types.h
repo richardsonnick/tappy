@@ -22,7 +22,7 @@ typedef struct {
     uint32_t destination_address; // 32 bits
     // ...options
     // ...padding
-} ip_packet_t;
+} ip_header_t;
 
 #define MIN_TCP_PACKET_SIZE 20
 

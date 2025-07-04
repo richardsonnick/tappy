@@ -9,6 +9,27 @@
 
 #include "utils.h"
 
+#define COLOR_GREEN "\033[32m"
+#define COLOR_RED "\033[31m"
+#define COLOR_RESET "\033[0m"
+
+// Prints the buf with the ip and tcp parts delimited
+void print_raw_buf(const uint8_t* buf, const size_t buf_len) {
+    // Assuming the buf starts with the ip header:
+    uint16_t ip_header_len = ((uint16_t)buf[3]) | ((uint16_t)buf[2] << 8);
+    printf("IP header len: %d\n", ip_header_len);
+    for (int i = 0; i < buf_len; i++) {
+        if (i < ip_header_len) {
+            // Use green color
+            printf(COLOR_GREEN "%02x " COLOR_RESET, buf[i]);
+        } else {
+            // use red color
+            printf(COLOR_RED "%02x " COLOR_RESET, buf[i]);
+        }
+    }
+    printf("\n");
+}
+
 /**
  * Allocates a tun driver
  * https://www.kernel.org/doc/Documentation/networking/tuntap.txt
@@ -57,14 +78,14 @@ uint32_t to_ip_encoding(const ip_addr_t* ip_addr) {
  *    computing the checksum, the value of the checksum field is zero."
  *  https://datatracker.ietf.org/doc/html/rfc791#section-3.1
  */
-uint16_t compute_checksum(const ip_packet_t* packet) {
+uint16_t compute_checksum(const ip_header_t* packet) {
     uint16_t checksum;
     uint8_t header[20];
 
-    ip_packet_t temp_packet = *packet;
+    ip_header_t temp_packet = *packet;
     temp_packet.header_checksum = 0; // ensure the checksum is set to zero
 
-    to_buf(&temp_packet, header, 20);
+    ip_header_to_buf(&temp_packet, header, 20);
 
     uint32_t sum = 0;
 
@@ -86,7 +107,7 @@ uint16_t compute_checksum(const ip_packet_t* packet) {
     return (uint16_t)(~sum);
 }
 
-size_t to_buf(const ip_packet_t* packet, uint8_t* buf, size_t buf_len) {
+size_t ip_header_to_buf(const ip_header_t* packet, uint8_t* buf, size_t buf_len) {
     if (buf_len < MIN_IP4_HEADER_SIZE) {
         return -1;
     }
@@ -115,6 +136,11 @@ size_t to_buf(const ip_packet_t* packet, uint8_t* buf, size_t buf_len) {
     buf[i++] = (header_checksum & 0xFF); 
     buf[i++] = (header_checksum >> 8);
 
+    // TODO: These look wrong... Why do i add the high bytes first here
+    //  but have to add the lower bytes first in header_checksum??
+    //   like why does this work... tcpdump shows the correct thing...
+    //   this is how i was doing this before, but ran into issues with
+    //   the parsing of total_length and identification fields...
     uint32_t source_address = htonl(packet->source_address);
     buf[i++] = (source_address >> 24);
     buf[i++] = (source_address >> 16) & 0xFF; 
@@ -130,7 +156,7 @@ size_t to_buf(const ip_packet_t* packet, uint8_t* buf, size_t buf_len) {
     return i;
 }
 
-bool to_packet(const uint8_t* buf, size_t len, ip_packet_t* out_packet) {
+bool ip_buf_to_packet(const uint8_t* buf, size_t len, ip_header_t* out_packet) {
     if (len < MIN_IP4_HEADER_SIZE) {
         return false;
     }
@@ -166,5 +192,48 @@ bool to_packet(const uint8_t* buf, size_t len, ip_packet_t* out_packet) {
 }
 
 size_t tcp_packet_to_buf(const tcp_packet_t* packet, uint8_t* buf, size_t buf_len) {
+    if (buf_len < MIN_TCP_PACKET_SIZE) {
+        return -1;
+    }
 
+    uint8_t i = 0;
+    uint16_t source_port = htons(packet->source_port);
+    buf[i++] = (source_port & 0xFF); 
+    buf[i++] = (source_port >> 8);
+
+    uint16_t destination_port = htons(packet->destination_port);
+    buf[i++] = (destination_port & 0xFF); 
+    buf[i++] = (destination_port >> 8);
+
+    uint32_t sequence_number = htonl(packet->sequence_number);
+    buf[i++] = (sequence_number >> 24);
+    buf[i++] = (sequence_number >> 16) & 0xFF; 
+    buf[i++] = (sequence_number >> 8) & 0xFF; 
+    buf[i++] = (sequence_number & 0x00FF); 
+
+    uint32_t acknowledgment_number = htonl(packet->acknowledgment_number);
+    buf[i++] = (acknowledgment_number >> 24);
+    buf[i++] = (acknowledgment_number >> 16) & 0xFF; 
+    buf[i++] = (acknowledgment_number >> 8) & 0xFF; 
+    buf[i++] = (acknowledgment_number & 0x00FF); 
+
+    buf[i++] = ((packet->data_offset & 0x0f) << 4) | (packet->reserved & 0x0F);
+
+    buf[i++] = packet->flags;
+
+    uint16_t window = htons(packet->window);
+    buf[i++] = (window & 0xFF); 
+    buf[i++] = (window >> 8);
+
+    uint16_t checksum = htons(packet->checksum);
+    buf[i++] = (checksum & 0xFF); 
+    buf[i++] = (checksum >> 8);
+
+    uint16_t urgent_pointer = htons(packet->urgent_pointer);
+    buf[i++] = (urgent_pointer & 0xFF); 
+    buf[i++] = (urgent_pointer >> 8);
+
+    //...options
+
+    //...data (variable length)
 }

@@ -8,7 +8,7 @@
 
 void client_loop(int netdev_fd) {
     printf("Running client...\n");
-    ip_packet_t packet = {
+    ip_header_t ip_header = {
         .version = 4,
         .ihl = 5,
         .type_of_service = 0x66,
@@ -22,11 +22,26 @@ void client_loop(int netdev_fd) {
         .source_address = to_ip_encoding_decomposed(127,0,0,1),
         .destination_address = to_ip_encoding_decomposed(127,0,0,1),
     };
-    packet.header_checksum = compute_checksum(&packet);
-    const uint8_t buf_len = 20;
+    ip_header.header_checksum = compute_checksum(&ip_header);
+    const uint8_t buf_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE;
     uint8_t buf[buf_len];
-    to_buf(&packet, buf, buf_len);
+    ip_header_to_buf(&ip_header, buf, MIN_IP4_HEADER_SIZE);
+
+    tcp_packet_t tcp_packet = {
+        .source_port = 0x04,
+        .destination_port = 0x05,
+        .sequence_number = 0x00,
+        .acknowledgment_number = 0x00,
+        .data_offset = 0x05,
+        .reserved = 0x00,
+        .flags = 0x00,
+        .window = 0x00,
+        .checksum = 0x00,
+        .urgent_pointer = 0x00
+    };
+    tcp_packet_to_buf(&tcp_packet, buf + MIN_IP4_HEADER_SIZE, MIN_TCP_PACKET_SIZE);
     while (1) {
+        print_raw_buf(buf, buf_len);
         ssize_t written = write(netdev_fd, buf, buf_len);
         if (written != buf_len) {
             perror("write");
