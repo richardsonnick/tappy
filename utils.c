@@ -87,9 +87,7 @@ uint16_t compute_checksum(const ip_packet_t* packet) {
 }
 
 size_t to_buf(const ip_packet_t* packet, uint8_t* buf, size_t buf_len) {
-    // TODO: IDK if this is right...
-    // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
-    if (buf_len < 20) {
+    if (buf_len < MIN_IP4_HEADER_SIZE) {
         return -1;
     }
 
@@ -133,7 +131,7 @@ size_t to_buf(const ip_packet_t* packet, uint8_t* buf, size_t buf_len) {
 }
 
 bool to_packet(const uint8_t* buf, size_t len, ip_packet_t* out_packet) {
-    if (len < 20) {
+    if (len < MIN_IP4_HEADER_SIZE) {
         return false;
     }
     uint8_t i = 0;
@@ -165,4 +163,8 @@ bool to_packet(const uint8_t* buf, size_t len, ip_packet_t* out_packet) {
                                 | ((uint32_t) buf[i++] << 8)
                                 | ((uint32_t) buf[i++]);
     return true;
+}
+
+size_t tcp_packet_to_buf(const tcp_packet_t* packet, uint8_t* buf, size_t buf_len) {
+
 }
