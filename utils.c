@@ -142,17 +142,17 @@ size_t ip_header_to_buf(const ip_header_t* packet, uint8_t* buf, size_t buf_len)
     //   like why does this work... tcpdump shows the correct thing...
     //   this is how i was doing this before, but ran into issues with
     //   the parsing of total_length and identification fields...
-    uint32_t source_address = htonl(packet->source_address);
-    buf[i++] = (source_address >> 24);
-    buf[i++] = (source_address >> 16) & 0xFF; 
-    buf[i++] = (source_address >> 8) & 0xFF; 
+    uint32_t source_address = packet->source_address;
     buf[i++] = (source_address & 0x00FF); 
+    buf[i++] = (source_address >> 8) & 0xFF; 
+    buf[i++] = (source_address >> 16) & 0xFF; 
+    buf[i++] = (source_address >> 24);
 
-    uint32_t destination_address = htonl(packet->destination_address);
-    buf[i++] = (destination_address >> 24);
-    buf[i++] = (destination_address >> 16) & 0xFF; 
-    buf[i++] = (destination_address >> 8) & 0xFF; 
+    uint32_t destination_address = packet->destination_address;
     buf[i++] = (destination_address & 0x00FF); 
+    buf[i++] = (destination_address >> 8) & 0xFF; 
+    buf[i++] = (destination_address >> 16) & 0xFF; 
+    buf[i++] = (destination_address >> 24);
 
     return i;
 }
