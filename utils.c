@@ -16,7 +16,7 @@
 // Prints the buf with the ip and tcp parts delimited
 void print_raw_buf(const uint8_t* buf, const size_t buf_len) {
     // Assuming the buf starts with the ip header:
-    uint16_t ip_header_len = ((uint16_t)buf[3]) | ((uint16_t)buf[2] << 8);
+    uint8_t ip_header_len = ((uint16_t)buf[0] & 0x0F) * 4;  // ihl repr num of 32 bit (4 byte) words 
     printf("IP header len: %d\n", ip_header_len);
     for (int i = 0; i < buf_len; i++) {
         if (i < ip_header_len) {
@@ -217,7 +217,7 @@ size_t tcp_packet_to_buf(const tcp_packet_t* packet, uint8_t* buf, size_t buf_le
     buf[i++] = (acknowledgment_number >> 8) & 0xFF; 
     buf[i++] = (acknowledgment_number & 0x00FF); 
 
-    buf[i++] = ((packet->data_offset & 0x0f) << 4) | (packet->reserved & 0x0F);
+    buf[i++] = ((packet->data_offset & 0x0F) << 4) | (packet->reserved & 0x0F);
 
     buf[i++] = packet->flags;
 
