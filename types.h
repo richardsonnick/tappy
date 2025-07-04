@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+#define MIN_IP4_HEADER_SIZE 20
+#define MIN_IP6_HEADER_SIZE 40
+
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
 typedef struct {
     uint8_t version;  // 4 bits
@@ -20,6 +23,8 @@ typedef struct {
     // ...options
     // ...padding
 } ip_packet_t;
+
+#define MIN_TCP_PACKET_SIZE 20
 
 // https://datatracker.ietf.org/doc/html/rfc9293#section-3.1
 typedef struct {
