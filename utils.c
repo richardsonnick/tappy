@@ -65,6 +65,80 @@ int tun_alloc(char *dev) {
     return fd;
 }
 
+
+uint8_t* data_to_tcp_buf(const uint8_t* data, const size_t data_len, 
+    const ip_addr_t* source_ip,
+    const ip_addr_t* destination_ip,
+    const uint16_t source_port,
+    const uint16_t destination_port,
+    size_t* out_total_packet_len) {
+        const size_t total_tcp_segment_len = MIN_TCP_PACKET_SIZE + data_len;
+        const size_t total_packet_len = MIN_IP4_HEADER_SIZE + total_tcp_segment_len;
+
+        uint8_t* packet_buf = (uint8_t*)malloc(total_packet_len);
+        if (packet_buf == NULL) {
+            perror("Failed to allocate packet_buf");
+            return NULL;
+        }
+
+        uint32_t src_ip_encoded = to_ip_encoding(source_ip);
+        uint32_t dst_ip_encoded = to_ip_encoding(destination_ip);
+
+        ip_header_t ip_header = {
+            .version = 4,
+            .ihl = 5, // header length in 32 bit (4 bytes) words i.e. ihl == 5 implies (5 * 4) 20 byte header
+            .type_of_service = 0x66,
+            .total_length = (uint16_t)total_packet_len, // total length of the ip header + payload (tcp packets etc).
+            .identification = 0x7777,
+            .flags = 0x00,
+            .fragment_offset = 0x0000,
+            .time_to_live = 69,
+            .protocol = 0x06, // TCP
+            .header_checksum = 0x00,
+            .source_address = src_ip_encoded,
+            .destination_address = dst_ip_encoded,
+        };
+
+        ip_header.header_checksum = compute_ip_checksum(&ip_header);
+        ip_header_to_buf(&ip_header, packet_buf, MIN_IP4_HEADER_SIZE);
+
+        tcp_packet_t tcp_packet = {
+            .source_port = source_port,
+            .destination_port = destination_port,
+            .sequence_number = 0x00,
+            .acknowledgment_number = 0x00,
+            .data_offset = (MIN_TCP_PACKET_SIZE / 4), // data offset in 4 byte words (words == 32 bits)
+            .reserved = 0x00,
+            .flags = 0x00,
+            .window = 0x00,
+            .checksum = 0x00,
+            .urgent_pointer = 0x00,
+            .data = data,
+            .data_len = data_len
+        };
+        tcp_packet.checksum = compute_tcp_packet_checksum(&tcp_packet, 
+            ip_header.source_address, 
+            ip_header.destination_address, 
+            (uint16_t)total_tcp_segment_len);
+        
+        size_t bytes_written_tcp = tcp_packet_to_buf(
+            &tcp_packet,
+            packet_buf + MIN_IP4_HEADER_SIZE,
+            total_tcp_segment_len
+        );
+
+        if (bytes_written_tcp == 0) {
+            free(packet_buf);
+            return NULL;
+        }
+
+        if (out_total_packet_len) {
+            *out_total_packet_len = total_packet_len;
+        }
+
+        return packet_buf;
+    }
+
 uint32_t to_ip_encoding_decomposed(const uint8_t a, const uint8_t b, const uint8_t c, const uint8_t d) {
    return ((a << 24) | (b << 16) | (c << 8) | (d));
 }
@@ -114,9 +188,9 @@ uint16_t compute_tcp_packet_checksum(const tcp_packet_t* packet,
     sum += 6; // TCP protocol
     sum += tcp_length;
 
-    for (int i = 0; i < tcp_header_len; i += 2) {
+    for (int i = 0; i < total_tcp_len; i += 2) {
         uint16_t word;
-        if (i + 1 < tcp_header_len) {
+        if (i + 1 < total_tcp_len) {
             word = (checksum_buf[i] << 8) | checksum_buf[i + 1];
         } else {
             word = checksum_buf[i] << 8;

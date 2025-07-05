@@ -3,50 +3,30 @@
 #include <unistd.h>
 #include "types.h"
 #include "utils.h"
+#include "string.h"
 
 #include "client.h"
 
 void client_loop(int netdev_fd) {
     printf("Running client...\n");
-    ip_header_t ip_header = {
-        .version = 4,
-        .ihl = 5, // header length in 32 bit (4 bytes) words i.e. ihl == 5 implies (5 * 4) 20 byte header
-        .type_of_service = 0x66,
-        .total_length = 40, // total length of the ip header + payload (tcp packets etc).
-        .identification = 0x7777,
-        .flags = 0x00,
-        .fragment_offset = 0x0000,
-        .time_to_live = 0xFF,
-        .protocol = 0x06, // TCP
-        .header_checksum = 0x00,
-        .source_address = to_ip_encoding_decomposed(127,0,0,1),
-        .destination_address = to_ip_encoding_decomposed(127,0,0,1),
-    };
-    ip_header.header_checksum = compute_ip_checksum(&ip_header);
-    const uint8_t buf_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE;
-    uint8_t buf[buf_len];
-    ip_header_to_buf(&ip_header, buf, MIN_IP4_HEADER_SIZE);
+    const char* data = "hello world";
+    size_t data_len = strlen(data);
+    ip_addr_t source_ip = {127, 0, 0, 1};
+    ip_addr_t destination_ip = {127, 0, 0, 1};
+    uint8_t* tcp_buf = NULL;
+    size_t buf_len = 0;
 
-    tcp_packet_t tcp_packet = {
-        .source_port = 4,
-        .destination_port = 5,
-        .sequence_number = 0x00,
-        .acknowledgment_number = 0x00,
-        .data_offset = 0x05,
-        .reserved = 0x00,
-        .flags = 0x00,
-        .window = 0x00,
-        .checksum = 0x00,
-        .urgent_pointer = 0x00,
-    };
-    tcp_packet.checksum = compute_tcp_packet_checksum(&tcp_packet, 
-        ip_header.source_address, 
-        ip_header.destination_address, 
-        ip_header.total_length - (ip_header.ihl * 4));
-    tcp_packet_to_buf(&tcp_packet, buf + MIN_IP4_HEADER_SIZE, MIN_TCP_PACKET_SIZE);
+    tcp_buf = data_to_tcp_buf(data, strlen(data), 
+                                    &source_ip, &destination_ip,
+                                    4, 5, &buf_len);
+    if (tcp_buf == NULL) {
+        fprintf(stderr, "Failed to build TCP packet.\n");
+        return;
+    }
+
     while (1) {
-        print_raw_buf(buf, buf_len);
-        ssize_t written = write(netdev_fd, buf, buf_len);
+        print_raw_buf(tcp_buf, buf_len);
+        ssize_t written = write(netdev_fd, tcp_buf, buf_len);
         if (written != buf_len) {
             perror("write");
         }

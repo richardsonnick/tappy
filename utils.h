@@ -18,6 +18,13 @@ uint32_t to_ip_encoding_decomposed(const uint8_t a, const uint8_t b, const uint8
  */
 uint32_t to_ip_encoding(const ip_addr_t* ip_addr);
 
+uint8_t* data_to_tcp_buf(const uint8_t* data, const size_t data_len, 
+    const ip_addr_t* source_ip,
+    const ip_addr_t* destination_ip,
+    const uint16_t source_port,
+    const uint16_t destination_port,
+    size_t* out_total_packet_len);
+
 uint16_t compute_ip_checksum(const ip_header_t* header);
 uint16_t compute_tcp_packet_checksum(const tcp_packet_t* packet,
                                     uint32_t src_ip, uint32_t dst_ip,
