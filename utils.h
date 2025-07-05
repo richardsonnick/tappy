@@ -20,5 +20,6 @@ uint32_t to_ip_encoding_decomposed(const uint8_t a, const uint8_t b, const uint8
 uint32_t to_ip_encoding(const ip_addr_t* ip_addr);
 
 ip_addr_t from_ip_encoding(const uint32_t ip);
+void print_tcp_packet(const tcp_packet_t* packet);
 
 #endif // UTILS_H

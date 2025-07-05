@@ -33,12 +33,17 @@ void server_loop(int port) {
         print_raw_buf(buf, buf_len);
         tcp_ip_t* tcp_ip = malloc(sizeof(tcp_ip_t));
         tcp_ip->ip_header = malloc(sizeof(ip_header_t));
+        tcp_ip->tcp_packet = malloc(sizeof(tcp_packet_t));
         ip_buf_to_packet(buf, 20, tcp_ip->ip_header);
+        tcp_packet_to_buf(tcp_ip->tcp_packet, buf + MIN_IP4_HEADER_SIZE, MIN_TCP_PACKET_SIZE);
 
         size_t got_tcp_len = tcp_ip_from_buf(buf, buf_len, tcp_ip);
         if (got_tcp_len > 1) {
             printf("Got TCP packet:\n");
+            printf("IP Header:\n");
             print_ip_header(tcp_ip->ip_header);
+            printf("TCP Packet:\n");
+            print_tcp_packet(tcp_ip->tcp_packet);
         }
         free(tcp_ip->ip_header);
         free(tcp_ip->tcp_packet);

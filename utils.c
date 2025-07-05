@@ -31,6 +31,20 @@ void print_ip_header(const ip_header_t* ip_header) {
     printf("    destination ip: %d.%d.%d.%d\n", destination_ip.a, destination_ip.b, destination_ip.c, destination_ip.d);
 }
 
+void print_tcp_packet(const tcp_packet_t* packet) {
+    printf("    source_port: %d\n", packet->source_port);
+    printf("    destination_port: %d\n", packet->destination_port);
+    printf("    sequence_number: %d\n", packet->sequence_number);
+    printf("    acknowledgment_number: %d\n", packet->acknowledgment_number);
+    printf("    data_offset: %d\n", packet->data_offset);
+    printf("    reserved: %d\n", packet->reserved);
+    printf("    flags: %d\n", packet->flags);
+    printf("    window: %d\n", packet->window);
+    printf("    checksum: %04x\n", packet->checksum);
+    printf("    urgent_pointer: %d\n", packet->urgent_pointer);
+    // ... data
+}
+
 // Prints the buf with the ip and tcp parts delimited
 void print_raw_buf(const uint8_t* buf, const size_t buf_len) {
     // Assuming the buf starts with the ip header:
