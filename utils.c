@@ -44,7 +44,6 @@ int tun_alloc(char *dev) {
 
     int fd, err;
 
-
     if ( (fd = open("/dev/net/tun", O_RDWR)) < 0) {
         perror("Error opening /dev/net/tun");
         return -1;

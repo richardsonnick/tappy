@@ -12,8 +12,8 @@
 
 void send_syn(int netdev_fd) {
     printf("Sending syn... ");
-    ip_addr_t source_ip = {127, 0, 0, 1};
-    ip_addr_t destination_ip = {127, 0, 0, 1};
+    ip_addr_t source_ip = {192, 168, 1, 246};
+    ip_addr_t destination_ip = {192, 168, 1, 246};
     tcp_connection_t conn = {.state=CLOSED,.netdev_fd=netdev_fd};
     conn.tcb = init_tcp_stack(&source_ip, &destination_ip,
                 8080,  //source port

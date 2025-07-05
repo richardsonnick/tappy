@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
 
     int fd;
 
-    printf("Created tun fd:%d\n", fd);
+    // printf("Created tun fd:%d\n", fd);
     if (strcmp(argv[1], "client") == 0) {
         char dev_client[IFNAMSIZ] = "tun0";
         if ( (fd = tun_alloc(dev_client)) < 0) {
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]){
             printf("Failed to open tun device\n");
             return -1;
         }
-        server_loop(fd);
+        server_loop(8081);
     }
 
     close(fd);
