@@ -1,3 +1,8 @@
+#include <stdint.h>
+#include <stddef.h>
+
+#define TCP_BUF_SIZE 8192
+
 // https://datatracker.ietf.org/doc/html/rfc9293#section-3.3.2
 typedef enum {
     LISTEN,
@@ -21,3 +26,20 @@ typedef enum {
     ABORT,
     STATUS
 } TCP_EVENT;
+
+typedef struct {
+    uint8_t* data;
+    size_t length;
+} tcp_buffer_t;
+
+typedef struct {
+    uint32_t seq_num;
+    tcp_buffer_t send_buf;
+    tcp_buffer_t recv_buf;
+} tcb_t;
+
+// Tracks tcp connection state.
+typedef struct {
+    TCP_STATE state;
+    tcb_t* tcb;
+} tcp_connection_t;
