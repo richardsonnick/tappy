@@ -24,10 +24,9 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
     switch(conn->state) {
         case(CLOSED):
             if (event == OPEN) {
-                // Active OPEN (send syn)
+                // Passive OPEN (listen for syn)
                 conn->tcb = init_tcp_stack();
-                // TODO: Send syn
-                return SYN_SENT;
+                return LISTEN;
             }
             break;
         case(LISTEN):
