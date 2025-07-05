@@ -34,7 +34,7 @@ typedef struct {
 
 typedef struct {
     uint32_t seq_num;
-    tcp_buffer_t send_buf;
+    tcp_buffer_t send_buf; // For sending user data. SYN ACK etc are sent immediately by the SM.
     tcp_buffer_t recv_buf;
 } tcb_t;
 
