@@ -44,7 +44,7 @@ tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags) {
         tcp_ip->ip_header->time_to_live = 69;
         tcp_ip->ip_header->protocol = 0x06; // TCP
         tcp_ip->ip_header->header_checksum = 0x00;
-        tcp_ip->ip_header->header_checksum = src_ip_encoded;
+        tcp_ip->ip_header->source_address = src_ip_encoded;
         tcp_ip->ip_header->destination_address = dst_ip_encoded;
         tcp_ip->ip_header->header_checksum = compute_ip_checksum(tcp_ip->ip_header);
 
