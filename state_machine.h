@@ -1,5 +1,10 @@
+#ifndef STATE_MACHINE_H
+#define STATE_MACHINE_H
+
 #include <stdint.h>
 #include <stddef.h>
+
+#include "types.h"
 
 #define TCP_BUF_SIZE 8192
 
@@ -47,3 +52,5 @@ typedef struct {
     TCP_STATE state;
     tcb_t* tcb;
 } tcp_connection_t;
+
+#endif

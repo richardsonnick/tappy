@@ -1,5 +1,6 @@
-#include "StateMachine.h"
-#include "ServerStateMachine.h"
+#include <stdlib.h>
+#include "state_machine.h"
+#include "server_state_machine.h"
 
 tcb_t* init_tcp_stack() {
     tcb_t* tcb = malloc(sizeof(tcb_t));
@@ -19,7 +20,7 @@ void teardown(tcp_connection_t* conn) {
 }
 
 // TODO: There are parts here where i should check for ack of something rather than just ack.
-TCP_STATE handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp_packet_t* packet) {
+TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp_packet_t* packet) {
     switch(conn->state) {
         case(CLOSED):
             if (event == OPEN) {
