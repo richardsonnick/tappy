@@ -1,19 +1,6 @@
 # tappy
 A toy tcp library
 
-# Setup
-Currently this is in a testing phase using `/dev/tun`. So this requires setting up a tun device:
-```
-# Create the TUN interface
-sudo ip tuntap add dev tun0 mode tun
-
-# Bring it up
-sudo ip link set tun0 up
-
-# Assign an IP address (ip address is just an example)
-sudo ip addr add 10.0.0.1/24 dev tun0
-```
-
 # Testing
 Currently no unit tests. Just grab packets via tcpdump:
 ```
