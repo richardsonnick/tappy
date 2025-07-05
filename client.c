@@ -22,14 +22,14 @@ void client_loop(int netdev_fd) {
         .source_address = to_ip_encoding_decomposed(127,0,0,1),
         .destination_address = to_ip_encoding_decomposed(127,0,0,1),
     };
-    ip_header.header_checksum = compute_checksum(&ip_header);
+    ip_header.header_checksum = compute_ip_checksum(&ip_header);
     const uint8_t buf_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE;
     uint8_t buf[buf_len];
     ip_header_to_buf(&ip_header, buf, MIN_IP4_HEADER_SIZE);
 
     tcp_packet_t tcp_packet = {
-        .source_port = 0x04,
-        .destination_port = 0x05,
+        .source_port = 4,
+        .destination_port = 5,
         .sequence_number = 0x00,
         .acknowledgment_number = 0x00,
         .data_offset = 0x05,
@@ -39,6 +39,10 @@ void client_loop(int netdev_fd) {
         .checksum = 0x00,
         .urgent_pointer = 0x00
     };
+    tcp_packet.checksum = compute_tcp_packet_checksum(&tcp_packet, 
+        ip_header.source_address, 
+        ip_header.destination_address, 
+        ip_header.total_length - (ip_header.ihl * 4));
     tcp_packet_to_buf(&tcp_packet, buf + MIN_IP4_HEADER_SIZE, MIN_TCP_PACKET_SIZE);
     while (1) {
         print_raw_buf(buf, buf_len);

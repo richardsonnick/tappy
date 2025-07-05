@@ -65,11 +65,73 @@ int tun_alloc(char *dev) {
 }
 
 uint32_t to_ip_encoding_decomposed(const uint8_t a, const uint8_t b, const uint8_t c, const uint8_t d) {
-   return htonl((a << 24) | (b << 16) | (c << 8) | (d));
+   return ((a << 24) | (b << 16) | (c << 8) | (d));
 }
 
 uint32_t to_ip_encoding(const ip_addr_t* ip_addr) {
-   return htonl((ip_addr->a << 24) | (ip_addr->b << 16) | (ip_addr->c << 8) | (ip_addr->d));
+   return ((ip_addr->a << 24) | (ip_addr->b << 16) | (ip_addr->c << 8) | (ip_addr->d));
+}
+
+/***
+ * The checksum field is the 16-bit ones' complement of the ones' complement sum of all 16-bit words in the header and text.
+ * The checksum computation needs to ensure the 16-bit alignment of the data being summed.
+ * If a segment contains an odd number of header and text octets, alignment can be achieved by padding the last octet with zeros on its right to form a 16-bit word for checksum purposes. 
+ * The pad is not transmitted as part of the segment. While computing the checksum, the checksum field itself is replaced with zeros.
+ * 
+ * The checksum also covers a pseudo-header (Figure 2) conceptually prefixed to the TCP header.
+ * The pseudo-header is 96 bits for IPv4 and 320 bits for IPv6.
+ * Including the pseudo-header in the checksum gives the TCP connection protection against misrouted segments.
+ * This information is carried in IP headers and is transferred across the TCP/network interface in the arguments or results of calls by the TCP implementation on the IP layer.
+ * https://datatracker.ietf.org/doc/html/rfc9293#section-3.1
+ */
+uint16_t compute_tcp_packet_checksum(const tcp_packet_t* packet,
+                                    uint32_t src_ip, uint32_t dst_ip,
+                                    uint16_t tcp_length) {
+    tcp_packet_t temp_packet = *packet; // ensure checksum is set to zero 
+    temp_packet.checksum = 0; 
+
+    const uint8_t tcp_header_len = packet->data_offset * 4;
+    uint8_t buf[tcp_header_len];
+    tcp_packet_to_buf(&temp_packet, buf, tcp_header_len);
+    printf("TCP buffer: ");
+for (int i = 0; i < tcp_header_len; i++) {
+    printf("%02x ", buf[i]);
+}
+printf("\n");
+
+    uint32_t sum = 0;
+
+    // This expaed the src_ip and dst_ip to be in little endian.
+    // TODO document and clean this up. I currently flipflop with htonl which feels weird.
+    uint32_t src_net = (src_ip);
+    uint32_t dst_net = (dst_ip);
+    sum += (src_net >> 16) & 0xFFFF;
+    sum += (src_net) & 0xFFFF;
+    sum += (dst_net >> 16) & 0xFFFF;
+    sum += (dst_net) & 0xFFFF;
+    sum += htons(6); // protocol
+    sum += htons(tcp_length);
+    printf("pseudo header sum: %04x\n", sum);
+
+    for (int i = 0; i < tcp_header_len; i += 2) {
+        uint16_t word;
+        if (i + 1 < tcp_header_len) {
+            word = (buf[i] << 8) | buf[i + 1];
+        } else {
+            word = buf[i] << 8; // TODO: the len can be odd. I think this is accounted for in the rfc padding...
+        }
+        sum += word;
+    }
+    printf("header sum: %04x\n", sum);
+
+    // carry bits
+    while (sum >> 16) {
+        sum = (sum & 0xFFFF) + (sum >> 16);
+    }
+
+    printf("after carry: %04x\n", sum);
+
+    return (uint16_t)(~sum);
 }
 
 /**
@@ -80,7 +142,6 @@ uint32_t to_ip_encoding(const ip_addr_t* ip_addr) {
  */
 uint16_t compute_ip_checksum(const ip_header_t* packet) {
     const uint8_t header_len = packet->ihl * 4;
-    uint16_t checksum;
     uint8_t header[header_len];
 
     ip_header_t temp_packet = *packet;
@@ -117,42 +178,37 @@ size_t ip_header_to_buf(const ip_header_t* packet, uint8_t* buf, size_t buf_len)
     buf[i++] = ((packet->version & 0x0f) << 4) | (packet->ihl & 0x0F);
     buf[i++] = packet->type_of_service;
 
-    uint16_t total_length = htons(packet->total_length);
-    buf[i++] = (total_length & 0xFF);
+    uint16_t total_length = packet->total_length;
     buf[i++] = (total_length >> 8);
+    buf[i++] = (total_length & 0xFF);
 
-    uint16_t identification = htons(packet->identification);
-    buf[i++] = (identification & 0xFF); 
+    uint16_t identification = packet->identification;
     buf[i++] = (identification >> 8);
+    buf[i++] = (identification & 0xFF); 
 
     uint16_t flags_fragment = ((packet-> flags & 0x7) << 13) | (packet->fragment_offset & 0x1FFF);
-    flags_fragment = htons(flags_fragment);
-    buf[i++] = flags_fragment & 0xFF;
+    flags_fragment = flags_fragment;
     buf[i++] = flags_fragment >> 8;
+    buf[i++] = flags_fragment & 0xFF;
 
     buf[i++] = packet->time_to_live;
     buf[i++] = packet->protocol;
 
-    uint16_t header_checksum = htons(packet->header_checksum);
-    buf[i++] = (header_checksum & 0xFF); 
+    uint16_t header_checksum = packet->header_checksum;
     buf[i++] = (header_checksum >> 8);
+    buf[i++] = (header_checksum & 0xFF); 
 
-    // TODO: These look wrong... Why do i add the high bytes first here
-    //  but have to add the lower bytes first in header_checksum??
-    //   like why does this work... tcpdump shows the correct thing...
-    //   this is how i was doing this before, but ran into issues with
-    //   the parsing of total_length and identification fields...
     uint32_t source_address = packet->source_address;
-    buf[i++] = (source_address & 0x00FF); 
-    buf[i++] = (source_address >> 8) & 0xFF; 
-    buf[i++] = (source_address >> 16) & 0xFF; 
     buf[i++] = (source_address >> 24);
+    buf[i++] = (source_address >> 16) & 0xFF; 
+    buf[i++] = (source_address >> 8) & 0xFF; 
+    buf[i++] = (source_address & 0x00FF); 
 
     uint32_t destination_address = packet->destination_address;
-    buf[i++] = (destination_address & 0x00FF); 
-    buf[i++] = (destination_address >> 8) & 0xFF; 
-    buf[i++] = (destination_address >> 16) & 0xFF; 
     buf[i++] = (destination_address >> 24);
+    buf[i++] = (destination_address >> 16) & 0xFF; 
+    buf[i++] = (destination_address >> 8) & 0xFF; 
+    buf[i++] = (destination_address & 0x00FF); 
 
     return i;
 }
@@ -198,21 +254,21 @@ size_t tcp_packet_to_buf(const tcp_packet_t* packet, uint8_t* buf, size_t buf_le
     }
 
     uint8_t i = 0;
-    uint16_t source_port = htons(packet->source_port);
-    buf[i++] = (source_port & 0xFF); 
-    buf[i++] = (source_port >> 8);
+    uint16_t source_port = packet->source_port;
+    buf[i++] = ((source_port >> 8) & 0xFF); 
+    buf[i++] = (source_port & 0xFF);
 
-    uint16_t destination_port = htons(packet->destination_port);
-    buf[i++] = (destination_port & 0xFF); 
-    buf[i++] = (destination_port >> 8);
+    uint16_t destination_port = packet->destination_port;
+    buf[i++] = ((destination_port >> 8) & 0xFF); 
+    buf[i++] = (destination_port & 0xFF);
 
-    uint32_t sequence_number = htonl(packet->sequence_number);
+    uint32_t sequence_number = packet->sequence_number;
     buf[i++] = (sequence_number >> 24);
     buf[i++] = (sequence_number >> 16) & 0xFF; 
     buf[i++] = (sequence_number >> 8) & 0xFF; 
     buf[i++] = (sequence_number & 0x00FF); 
 
-    uint32_t acknowledgment_number = htonl(packet->acknowledgment_number);
+    uint32_t acknowledgment_number = packet->acknowledgment_number;
     buf[i++] = (acknowledgment_number >> 24);
     buf[i++] = (acknowledgment_number >> 16) & 0xFF; 
     buf[i++] = (acknowledgment_number >> 8) & 0xFF; 
@@ -222,19 +278,20 @@ size_t tcp_packet_to_buf(const tcp_packet_t* packet, uint8_t* buf, size_t buf_le
 
     buf[i++] = packet->flags;
 
-    uint16_t window = htons(packet->window);
-    buf[i++] = (window & 0xFF); 
+    uint16_t window = packet->window;
     buf[i++] = (window >> 8);
+    buf[i++] = (window & 0xFF); 
 
-    uint16_t checksum = htons(packet->checksum);
-    buf[i++] = (checksum & 0xFF); 
+    uint16_t checksum = packet->checksum;
     buf[i++] = (checksum >> 8);
+    buf[i++] = (checksum & 0xFF); 
 
-    uint16_t urgent_pointer = htons(packet->urgent_pointer);
-    buf[i++] = (urgent_pointer & 0xFF); 
+    uint16_t urgent_pointer = packet->urgent_pointer;
     buf[i++] = (urgent_pointer >> 8);
+    buf[i++] = (urgent_pointer & 0xFF); 
 
     //...options
 
     //...data (variable length)
+    return i;
 }
