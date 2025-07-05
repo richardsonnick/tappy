@@ -39,7 +39,8 @@ typedef struct {
     uint16_t checksum; // 16 bits
     uint16_t urgent_pointer; // 16 bits
     // options...
-    // data...
+    const uint8_t* data;
+    size_t data_len;
 } tcp_packet_t;
 
 typedef struct {

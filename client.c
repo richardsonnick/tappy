@@ -37,7 +37,7 @@ void client_loop(int netdev_fd) {
         .flags = 0x00,
         .window = 0x00,
         .checksum = 0x00,
-        .urgent_pointer = 0x00
+        .urgent_pointer = 0x00,
     };
     tcp_packet.checksum = compute_tcp_packet_checksum(&tcp_packet, 
         ip_header.source_address, 
