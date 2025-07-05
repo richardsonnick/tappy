@@ -25,5 +25,6 @@ size_t ip_header_to_buf(const ip_header_t* packet, uint8_t* buf, size_t buf_len)
 size_t tcp_packet_to_buf(const tcp_packet_t* packet, uint8_t* buf, size_t buf_len);
 bool ip_buf_to_packet(const uint8_t* buf, size_t len, ip_header_t* out_packet);
 size_t tcp_ip_to_buf(const tcp_ip_t* tcp_ip, uint8_t* buf);
+size_t tcp_ip_from_buf(const uint8_t* buf, ssize_t buf_len, tcp_ip_t* tcp_ip);
 
 #endif

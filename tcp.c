@@ -375,3 +375,14 @@ size_t tcp_ip_to_buf(const tcp_ip_t* tcp_ip, uint8_t* buf) {
     ); 
     return bytes_written_ip + bytes_written_tcp;
 }
+
+size_t tcp_ip_from_buf(const uint8_t* buf, ssize_t buf_len, tcp_ip_t* tcp_ip) {
+    int i = 0;
+    tcp_ip->ip_header->version = ((uint8_t)buf[i] >> 4) & 0x0F;
+    tcp_ip->ip_header->ihl = ((uint8_t)buf[i++] & 0x0F);
+    tcp_ip->ip_header->type_of_service = buf[i++];
+    tcp_ip->ip_header->total_length = ((uint8_t)buf[i] >> 8) | ((uint8_t)buf[i++]);
+    tcp_ip->ip_header->identification = ((uint8_t)buf[i] >> 8) | ((uint8_t)buf[i++]);
+
+    return i;
+}

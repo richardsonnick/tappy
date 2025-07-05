@@ -1,4 +1,3 @@
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -6,8 +5,11 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include "server.h"
 #include "io.h"
+#include "utils.h"
+#include "tcp.h"
 
 void server_loop(int port) {
     printf("Running server...\n");
@@ -21,28 +23,26 @@ void server_loop(int port) {
     socklen_t sender_len = sizeof(sender_addr);
 
     while (1) {
-        ssize_t packet_len = recvfrom(sockfd, buf, sizeof(buf), 0,
+        ssize_t buf_len = recvfrom(sockfd, buf, sizeof(buf), 0,
                             (struct sockaddr*)&sender_addr, &sender_len);
-        if (packet_len < 0) {
+        if (buf_len < 0) {
             perror("recvfrom failed");
             continue; // just keep failing.
         }
 
-        struct iphdr* ip_header = (struct iphdr*)buf;
-        if (ip_header->protocol != IPPROTO_TCP) continue;
-        
-        struct tcphdr* tcp_header = (struct tcphdr*)(buf + ip_header->ihl * 4);
+        print_raw_buf(buf, buf_len);
+        tcp_ip_t* tcp_ip = malloc(sizeof(tcp_ip_t));
+        tcp_ip->ip_header = malloc(sizeof(ip_header_t));
+        ip_buf_to_packet(buf, 20, tcp_ip->ip_header);
 
-        if (ntohs(tcp_header->dest) == port) {
-            printf("Got TCP packet for port %d from %s:%d\n",
-                port,
-                inet_ntoa(sender_addr.sin_addr),
-                ntohs(tcp_header->source));
-            if (tcp_header->syn) {
-                printf("  -> SYN packet");
-            }
+        size_t got_tcp_len = tcp_ip_from_buf(buf, buf_len, tcp_ip);
+        if (got_tcp_len > 1) {
+            printf("Got TCP packet:\n");
+            print_ip_header(tcp_ip->ip_header);
         }
-
+        free(tcp_ip->ip_header);
+        free(tcp_ip->tcp_packet);
+        free(tcp_ip);
     }
     close(sockfd);
 

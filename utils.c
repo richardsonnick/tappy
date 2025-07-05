@@ -14,6 +14,23 @@
 #define COLOR_RED "\033[31m"
 #define COLOR_RESET "\033[0m"
 
+void print_ip_header(const ip_header_t* ip_header) {
+    printf("    version: %d\n", ip_header->version);
+    printf("    ihl: %d\n", ip_header->ihl);
+    printf("    type_of_service: %d\n", ip_header->type_of_service);
+    printf("    total_length: %d\n", ip_header->total_length);
+    printf("    identification: %d\n", ip_header->identification);
+    printf("    flags: %02x\n", ip_header->flags);
+    printf("    fragment_offset: %d\n", ip_header->fragment_offset);
+    printf("    time_to_live: %d\n", ip_header->time_to_live);
+    printf("    protocol: %d\n", ip_header->protocol);
+    printf("    header_checksum: %04x\n", ip_header->header_checksum);
+    ip_addr_t source_ip = from_ip_encoding(ip_header->source_address);
+    ip_addr_t destination_ip = from_ip_encoding(ip_header->destination_address);
+    printf("    source ip: %d.%d.%d.%d\n", source_ip.a, source_ip.b, source_ip.c, source_ip.d);
+    printf("    destination ip: %d.%d.%d.%d\n", destination_ip.a, destination_ip.b, destination_ip.c, destination_ip.d);
+}
+
 // Prints the buf with the ip and tcp parts delimited
 void print_raw_buf(const uint8_t* buf, const size_t buf_len) {
     // Assuming the buf starts with the ip header:
@@ -70,4 +87,14 @@ uint32_t to_ip_encoding_decomposed(const uint8_t a, const uint8_t b, const uint8
 
 uint32_t to_ip_encoding(const ip_addr_t* ip_addr) {
    return ((ip_addr->a << 24) | (ip_addr->b << 16) | (ip_addr->c << 8) | (ip_addr->d));
+}
+
+ip_addr_t from_ip_encoding(const uint32_t ip){
+    ip_addr_t ip_addr = {
+        .a = (uint8_t)(ip >> 24),
+        .b = (uint8_t)(ip >> 16),
+        .c = (uint8_t)(ip >> 8),
+        .d = (uint8_t)ip,
+    };
+    return ip_addr;
 }
