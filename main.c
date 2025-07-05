@@ -13,19 +13,24 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    char dev[IFNAMSIZ] = "tun0";
     int fd;
-    if ( (fd = tun_alloc(dev)) < 0) {
-        printf("Failed to open tun device\n");
-        return -1;
-    }
 
     printf("Created tun fd:%d\n", fd);
     if (strcmp(argv[1], "client") == 0) {
+        char dev_client[IFNAMSIZ] = "tun0";
+        if ( (fd = tun_alloc(dev_client)) < 0) {
+            printf("Failed to open tun device\n");
+            return -1;
+        }
         // client_loop(fd);
         send_syn(fd);
     }
     else if (strcmp(argv[1], "server") == 0) {
+        char dev_server[IFNAMSIZ] = "tun1";
+        if ( (fd = tun_alloc(dev_server)) < 0) {
+            printf("Failed to open tun device\n");
+            return -1;
+        }
         server_loop(fd);
     }
 
