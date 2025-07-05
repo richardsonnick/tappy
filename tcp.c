@@ -10,16 +10,29 @@
 
 #include "tcp.h"
 
-tcp_ip_t* make_syn(const ip_addr_t* src_ip,
-    const ip_addr_t* dst_ip,
-    const uint16_t src_port,
-    const uint16_t dst_port
-    ) {
+tcb_t* init_tcp_stack(ip_addr_t* source_ip, ip_addr_t* destination_ip,
+                    const uint16_t source_port, const uint16_t destination_port) {
+    tcb_t* tcb = malloc(sizeof(tcb_t));
+    if (!tcb) return NULL;
+
+    tcb->recv_buf.data = calloc(TCP_BUF_SIZE, sizeof(uint8_t));
+    tcb->recv_buf.length = TCP_BUF_SIZE;
+    tcb->send_buf.data = calloc(TCP_BUF_SIZE, sizeof(uint8_t));
+    tcb->send_buf.length = TCP_BUF_SIZE;
+    tcb->source_ip = source_ip;
+    tcb->destination_ip = destination_ip;
+    tcb->source_port = source_port;
+    tcb->destination_port = destination_port;
+
+    return tcb;
+}
+
+tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags) {
         tcp_ip_t* tcp_ip = malloc(sizeof(tcp_ip_t));
         tcp_ip->ip_header = malloc(sizeof(ip_addr_t));
         tcp_ip->tcp_packet = malloc(sizeof(tcp_packet_t));
-        uint32_t src_ip_encoded = to_ip_encoding(src_ip);
-        uint32_t dst_ip_encoded = to_ip_encoding(dst_ip);
+        uint32_t src_ip_encoded = to_ip_encoding(tcb->source_ip);
+        uint32_t dst_ip_encoded = to_ip_encoding(tcb->destination_ip);
 
         tcp_ip->ip_header->version = 4;
         tcp_ip->ip_header->ihl = 5; // header length in 32 bit (4 bytes) words i.e. ihl == 5 implies (5 * 4) 20 byte header
@@ -35,13 +48,13 @@ tcp_ip_t* make_syn(const ip_addr_t* src_ip,
         tcp_ip->ip_header->destination_address = dst_ip_encoded;
         tcp_ip->ip_header->header_checksum = compute_ip_checksum(tcp_ip->ip_header);
 
-        tcp_ip->tcp_packet->source_port = src_port;
-        tcp_ip->tcp_packet->destination_port = dst_port;
+        tcp_ip->tcp_packet->source_port = tcb->source_port;
+        tcp_ip->tcp_packet->destination_port = tcb->destination_port;
         tcp_ip->tcp_packet->sequence_number = 0x00;
         tcp_ip->tcp_packet->acknowledgment_number = 0x00;
         tcp_ip->tcp_packet->data_offset = (MIN_TCP_PACKET_SIZE / 4); // data offset in 4 byte words (words == 32 bits)
         tcp_ip->tcp_packet->reserved = 0x00;
-        tcp_ip->tcp_packet->flags = TCP_FLAG_SYN;
+        tcp_ip->tcp_packet->flags = flags;
         tcp_ip->tcp_packet->window = 0x00;
         tcp_ip->tcp_packet->checksum = 0x00;
         tcp_ip->tcp_packet->urgent_pointer = 0x00;
@@ -351,4 +364,14 @@ size_t tcp_packet_to_buf(const tcp_packet_t* packet, uint8_t* buf, size_t buf_le
         i += packet->data_len;
     }
     return i;
+}
+
+size_t tcp_ip_to_buf(const tcp_ip_t* tcp_ip, uint8_t* buf) {
+    size_t bytes_written_ip = ip_header_to_buf(tcp_ip->ip_header, buf, MIN_IP4_HEADER_SIZE);
+    size_t bytes_written_tcp = tcp_packet_to_buf(
+        tcp_ip->tcp_packet,
+        buf + MIN_IP4_HEADER_SIZE,
+        tcp_ip->ip_header->total_length - MIN_IP4_HEADER_SIZE // could be issue
+    ); 
+    return bytes_written_ip + bytes_written_tcp;
 }

@@ -6,8 +6,21 @@
 #include "tcp.h"
 #include "string.h"
 #include "io.h"
+#include "client_state_machine.h"
 
 #include "client.h"
+
+void send_syn(int netdev_fd) {
+    printf("Sending syn... ");
+    ip_addr_t source_ip = {127, 0, 0, 1};
+    ip_addr_t destination_ip = {127, 0, 0, 1};
+    tcp_connection_t conn = {.state=CLOSED,.netdev_fd=netdev_fd};
+    conn.tcb = init_tcp_stack(&source_ip, &destination_ip,
+                8080,  //source port
+                8081 // destination port
+                );
+    TCP_STATE state = client_handle_event(&conn, OPEN, NULL);
+}
 
 void client_loop(int netdev_fd) {
     printf("Running client...\n");

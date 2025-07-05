@@ -51,6 +51,7 @@ typedef struct {
 typedef struct {
     TCP_STATE state;
     tcb_t* tcb;
+    int netdev_fd; // TODO: This is bad design but yeah
 } tcp_connection_t;
 
 #endif

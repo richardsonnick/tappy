@@ -22,7 +22,8 @@ int main(int argc, char *argv[]){
 
     printf("Created tun fd:%d\n", fd);
     if (strcmp(argv[1], "client") == 0) {
-        client_loop(fd);
+        // client_loop(fd);
+        send_syn(fd);
     }
     else if (strcmp(argv[1], "server") == 0) {
         server_loop(fd);

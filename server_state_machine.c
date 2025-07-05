@@ -1,23 +1,14 @@
 #include <stdlib.h>
 #include "state_machine.h"
 #include "server_state_machine.h"
+#include "tcp.h"
+#include "io.h"
 
-tcb_t* init_tcp_stack() {
-    tcb_t* tcb = malloc(sizeof(tcb_t));
-    if (!tcb) return NULL;
-
-    tcb->recv_buf.data = calloc(TCP_BUF_SIZE, sizeof(uint8_t));
-    tcb->recv_buf.length = TCP_BUF_SIZE;
-    tcb->send_buf.data = calloc(TCP_BUF_SIZE, sizeof(uint8_t));
-    tcb->send_buf.length = TCP_BUF_SIZE;
-
-    return tcb;
-}
-
-void teardown(tcp_connection_t* conn) {
+void server_teardown(tcp_connection_t* conn) {
     free(conn->tcb);
     conn->tcb = NULL;
 }
+
 
 // TODO: There are parts here where i should check for ack of something rather than just ack.
 TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp_packet_t* packet) {
@@ -25,7 +16,7 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
         case(CLOSED):
             if (event == OPEN) {
                 // Passive OPEN (listen for syn)
-                conn->tcb = init_tcp_stack();
+                // conn->tcb = init_tcp_stack();
                 return LISTEN;
             }
             break;
@@ -92,7 +83,7 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
             break;
         case(TIME_WAIT):
             // Check timeout
-            teardown(conn);
+            server_teardown(conn);
             break;
     };
     return CLOSED; // maybe remove
