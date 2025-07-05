@@ -6,6 +6,7 @@
 #include <sys/ioctl.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
 
 #include "utils.h"
 
@@ -91,8 +92,19 @@ uint16_t compute_tcp_packet_checksum(const tcp_packet_t* packet,
     temp_packet.checksum = 0; 
 
     const uint8_t tcp_header_len = packet->data_offset * 4;
-    uint8_t buf[tcp_header_len];
-    tcp_packet_to_buf(&temp_packet, buf, tcp_header_len);
+    const uint8_t total_tcp_len = tcp_header_len + packet->data_len;
+
+    size_t checksum_buf_len = total_tcp_len;
+    if (checksum_buf_len % 2 != 0) {
+        checksum_buf_len++; // ensure checksum buf is even
+    }
+    uint8_t* checksum_buf = (uint8_t*)calloc(1, checksum_buf_len);
+    size_t bytes_written = tcp_packet_to_buf(&temp_packet, checksum_buf, checksum_buf_len);
+    if (bytes_written == 0) {
+        free(checksum_buf);
+        return 0;
+    }
+
     uint32_t sum = 0;
 
     sum += (src_ip >> 16) & 0xFFFF;
@@ -105,9 +117,9 @@ uint16_t compute_tcp_packet_checksum(const tcp_packet_t* packet,
     for (int i = 0; i < tcp_header_len; i += 2) {
         uint16_t word;
         if (i + 1 < tcp_header_len) {
-            word = (buf[i] << 8) | buf[i + 1];
+            word = (checksum_buf[i] << 8) | checksum_buf[i + 1];
         } else {
-            word = buf[i] << 8;
+            word = checksum_buf[i] << 8;
         }
         sum += word;
     }
@@ -117,6 +129,7 @@ uint16_t compute_tcp_packet_checksum(const tcp_packet_t* packet,
         sum = (sum & 0xFFFF) + (sum >> 16);
     }
 
+    free(checksum_buf);
     return (uint16_t)(~sum);
 }
 
