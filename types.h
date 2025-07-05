@@ -2,6 +2,7 @@
 #define TYPES_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define MIN_IP4_HEADER_SIZE 20
 #define MIN_IP6_HEADER_SIZE 40
