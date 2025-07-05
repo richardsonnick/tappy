@@ -45,6 +45,11 @@ typedef struct {
 } tcp_packet_t;
 
 typedef struct {
+    ip_header_t* ip_header;
+    tcp_packet_t* tcp_packet;
+} tcp_ip_t;
+
+typedef struct {
     uint8_t a;
     uint8_t b;
     uint8_t c;

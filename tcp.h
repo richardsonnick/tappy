@@ -3,6 +3,11 @@
 
 #include "types.h"
 
+tcp_ip_t* make_syn(const ip_addr_t* src_ip,
+    const ip_addr_t* dst_ip,
+    const uint16_t src_port,
+    const uint16_t dst_port);
+
 uint8_t* data_to_tcp_buf(const uint8_t* data, const size_t data_len, 
     const ip_addr_t* source_ip,
     const ip_addr_t* destination_ip,

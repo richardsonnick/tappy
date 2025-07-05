@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "tcp.h"
 #include "string.h"
+#include "io.h"
 
 #include "client.h"
 
@@ -26,11 +27,7 @@ void client_loop(int netdev_fd) {
     }
 
     while (1) {
-        print_raw_buf(tcp_buf, buf_len);
-        ssize_t written = write(netdev_fd, tcp_buf, buf_len);
-        if (written != buf_len) {
-            perror("write");
-        }
+        write_to_dev(netdev_fd, tcp_buf, buf_len);
         sleep(2);
     }
 }

@@ -36,6 +36,10 @@ typedef struct {
     uint32_t seq_num;
     tcp_buffer_t send_buf; // For sending user data. SYN ACK etc are sent immediately by the SM.
     tcp_buffer_t recv_buf;
+    ip_addr_t* source_ip;
+    ip_addr_t* destination_ip;
+    uint16_t source_port;
+    uint16_t destination_port;
 } tcb_t;
 
 // Tracks tcp connection state.

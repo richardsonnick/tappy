@@ -10,6 +10,49 @@
 
 #include "tcp.h"
 
+tcp_ip_t* make_syn(const ip_addr_t* src_ip,
+    const ip_addr_t* dst_ip,
+    const uint16_t src_port,
+    const uint16_t dst_port
+    ) {
+        tcp_ip_t* tcp_ip = malloc(sizeof(tcp_ip_t));
+        tcp_ip->ip_header = malloc(sizeof(ip_addr_t));
+        tcp_ip->tcp_packet = malloc(sizeof(tcp_packet_t));
+        uint32_t src_ip_encoded = to_ip_encoding(src_ip);
+        uint32_t dst_ip_encoded = to_ip_encoding(dst_ip);
+
+        tcp_ip->ip_header->version = 4;
+        tcp_ip->ip_header->ihl = 5; // header length in 32 bit (4 bytes) words i.e. ihl == 5 implies (5 * 4) 20 byte header
+        tcp_ip->ip_header->type_of_service = 0x66;
+        tcp_ip->ip_header->total_length = (uint16_t)MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE;
+        tcp_ip->ip_header->identification = 0x7777; // TODO: Fill with actual value
+        tcp_ip->ip_header->flags = 0x00;
+        tcp_ip->ip_header->fragment_offset = 0x0000;
+        tcp_ip->ip_header->time_to_live = 69;
+        tcp_ip->ip_header->protocol = 0x06; // TCP
+        tcp_ip->ip_header->header_checksum = 0x00;
+        tcp_ip->ip_header->header_checksum = src_ip_encoded;
+        tcp_ip->ip_header->destination_address = dst_ip_encoded;
+        tcp_ip->ip_header->header_checksum = compute_ip_checksum(tcp_ip->ip_header);
+
+        tcp_ip->tcp_packet->source_port = src_port;
+        tcp_ip->tcp_packet->destination_port = dst_port;
+        tcp_ip->tcp_packet->sequence_number = 0x00;
+        tcp_ip->tcp_packet->acknowledgment_number = 0x00;
+        tcp_ip->tcp_packet->data_offset = (MIN_TCP_PACKET_SIZE / 4); // data offset in 4 byte words (words == 32 bits)
+        tcp_ip->tcp_packet->reserved = 0x00;
+        tcp_ip->tcp_packet->flags = TCP_FLAG_SYN;
+        tcp_ip->tcp_packet->window = 0x00;
+        tcp_ip->tcp_packet->checksum = 0x00;
+        tcp_ip->tcp_packet->urgent_pointer = 0x00;
+        tcp_ip->tcp_packet->checksum = compute_tcp_packet_checksum(tcp_ip->tcp_packet, 
+            src_ip_encoded, 
+            dst_ip_encoded, 
+            (uint16_t)MIN_TCP_PACKET_SIZE);
+
+        return tcp_ip;
+}
+
 uint8_t* data_to_tcp_buf(const uint8_t* data, const size_t data_len, 
     const ip_addr_t* source_ip,
     const ip_addr_t* destination_ip,
