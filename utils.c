@@ -235,8 +235,10 @@ bool ip_buf_to_packet(const uint8_t* buf, size_t len, ip_header_t* out_packet) {
 }
 
 size_t tcp_packet_to_buf(const tcp_packet_t* packet, uint8_t* buf, size_t buf_len) {
-    if (buf_len < MIN_TCP_PACKET_SIZE) {
-        return -1;
+    size_t required_len = (packet->data_offset * 4) + packet->data_len;
+    if (buf_len < required_len) {
+        fprintf(stderr, "Buffer too small for tcp packet");
+        return 0;
     }
 
     uint8_t i = 0;
@@ -278,6 +280,9 @@ size_t tcp_packet_to_buf(const tcp_packet_t* packet, uint8_t* buf, size_t buf_le
 
     //...options
 
-    //...data (variable length)
+    if (packet->data && packet->data_len > 0) {
+        memcpy(buf + i, packet->data, packet->data_len);
+        i += packet->data_len;
+    }
     return i;
 }
