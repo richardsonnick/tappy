@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include "types.h"
 #include "utils.h"
+#include "tcp.h"
 #include "string.h"
 
 #include "client.h"
