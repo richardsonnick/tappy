@@ -93,43 +93,29 @@ uint16_t compute_tcp_packet_checksum(const tcp_packet_t* packet,
     const uint8_t tcp_header_len = packet->data_offset * 4;
     uint8_t buf[tcp_header_len];
     tcp_packet_to_buf(&temp_packet, buf, tcp_header_len);
-    printf("TCP buffer: ");
-for (int i = 0; i < tcp_header_len; i++) {
-    printf("%02x ", buf[i]);
-}
-printf("\n");
-
     uint32_t sum = 0;
 
-    // This expaed the src_ip and dst_ip to be in little endian.
-    // TODO document and clean this up. I currently flipflop with htonl which feels weird.
-    uint32_t src_net = (src_ip);
-    uint32_t dst_net = (dst_ip);
-    sum += (src_net >> 16) & 0xFFFF;
-    sum += (src_net) & 0xFFFF;
-    sum += (dst_net >> 16) & 0xFFFF;
-    sum += (dst_net) & 0xFFFF;
-    sum += htons(6); // protocol
-    sum += htons(tcp_length);
-    printf("pseudo header sum: %04x\n", sum);
+    sum += (src_ip >> 16) & 0xFFFF;
+    sum += (src_ip) & 0xFFFF;
+    sum += (dst_ip >> 16) & 0xFFFF;
+    sum += (dst_ip) & 0xFFFF;
+    sum += 6; // TCP protocol
+    sum += tcp_length;
 
     for (int i = 0; i < tcp_header_len; i += 2) {
         uint16_t word;
         if (i + 1 < tcp_header_len) {
             word = (buf[i] << 8) | buf[i + 1];
         } else {
-            word = buf[i] << 8; // TODO: the len can be odd. I think this is accounted for in the rfc padding...
+            word = buf[i] << 8;
         }
         sum += word;
     }
-    printf("header sum: %04x\n", sum);
 
     // carry bits
     while (sum >> 16) {
         sum = (sum & 0xFFFF) + (sum >> 16);
     }
-
-    printf("after carry: %04x\n", sum);
 
     return (uint16_t)(~sum);
 }
