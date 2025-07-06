@@ -313,6 +313,58 @@ bool ip_buf_to_packet(const uint8_t* buf, size_t len, ip_header_t* out_packet) {
     return true;
 }
 
+//TODO write tcp_buf_to_packet
+bool tcp_buf_to_packet(const uint8_t* buf, size_t len, tcp_packet_t* out_packet) {
+    if (len < MIN_TCP_PACKET_SIZE) {
+        return false;
+    }
+    uint8_t i = 0;
+    out_packet->source_port = ((uint16_t)buf[i++] << 8); 
+    out_packet->source_port = (((uint16_t)buf[i++] & 0x00FF) | out_packet->source_port); 
+    out_packet->destination_port = ((uint16_t)buf[i++] << 8); 
+    out_packet->destination_port = (((uint16_t)buf[i++] & 0x00FF) | out_packet->destination_port); 
+    out_packet->sequence_number = (((uint32_t) buf[i++]) << 24)
+                                | ((uint32_t) buf[i++] << 16)
+                                | ((uint32_t) buf[i++] << 8)
+                                | ((uint32_t) buf[i++]);
+    out_packet->acknowledgment_number = (((uint32_t) buf[i++]) << 24)
+                                | ((uint32_t) buf[i++] << 16)
+                                | ((uint32_t) buf[i++] << 8)
+                                | ((uint32_t) buf[i++]);
+    out_packet->data_offset = buf[i] >> 4;
+    out_packet->reserved = buf[i++] & 0x0F;
+    out_packet->flags = buf[i++];
+    out_packet->window = ((uint16_t)buf[i++] << 8); 
+    out_packet->window = (((uint16_t)buf[i++] & 0x00FF) | out_packet->window); 
+    out_packet->checksum = ((uint16_t)buf[i++] << 8); 
+    out_packet->checksum = (((uint16_t)buf[i++] & 0x00FF) | out_packet->checksum); 
+    out_packet->urgent_pointer = ((uint16_t)buf[i++] << 8); 
+    out_packet->urgent_pointer = (((uint16_t)buf[i++] & 0x00FF) | out_packet->urgent_pointer); 
+
+    // Read data
+    uint8_t header_len = out_packet->data_offset * 4;
+
+    if (i < len) {
+        out_packet->data_len = len = i;
+        if (out_packet->data_len > 0) {
+            uint8_t* data_copy = malloc(out_packet->data_len);
+            if (data_copy) {
+                memcpy(data_copy, buf + i, out_packet->data_len);
+                out_packet->data = data_copy;
+            } else {
+                out_packet->data = NULL;
+                out_packet->data_len = 0;
+            }
+        }
+    } else {
+        // No data payload
+        out_packet->data = NULL;
+        out_packet->data_len = 0;
+    }
+
+    return true;
+}
+
 size_t tcp_packet_to_buf(const tcp_packet_t* packet, uint8_t* buf, size_t buf_len) {
     size_t required_len = (packet->data_offset * 4) + packet->data_len;
     if (buf_len < required_len) {
@@ -374,15 +426,4 @@ size_t tcp_ip_to_buf(const tcp_ip_t* tcp_ip, uint8_t* buf) {
         tcp_ip->ip_header->total_length - MIN_IP4_HEADER_SIZE // could be issue
     ); 
     return bytes_written_ip + bytes_written_tcp;
-}
-
-size_t tcp_ip_from_buf(const uint8_t* buf, ssize_t buf_len, tcp_ip_t* tcp_ip) {
-    int i = 0;
-    tcp_ip->ip_header->version = ((uint8_t)buf[i] >> 4) & 0x0F;
-    tcp_ip->ip_header->ihl = ((uint8_t)buf[i++] & 0x0F);
-    tcp_ip->ip_header->type_of_service = buf[i++];
-    tcp_ip->ip_header->total_length = ((uint8_t)buf[i] >> 8) | ((uint8_t)buf[i++]);
-    tcp_ip->ip_header->identification = ((uint8_t)buf[i] >> 8) | ((uint8_t)buf[i++]);
-
-    return i;
 }

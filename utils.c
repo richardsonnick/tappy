@@ -32,17 +32,28 @@ void print_ip_header(const ip_header_t* ip_header) {
 }
 
 void print_tcp_packet(const tcp_packet_t* packet) {
-    printf("    source_port: %d\n", packet->source_port);
-    printf("    destination_port: %d\n", packet->destination_port);
-    printf("    sequence_number: %d\n", packet->sequence_number);
-    printf("    acknowledgment_number: %d\n", packet->acknowledgment_number);
-    printf("    data_offset: %d\n", packet->data_offset);
-    printf("    reserved: %d\n", packet->reserved);
-    printf("    flags: %d\n", packet->flags);
-    printf("    window: %d\n", packet->window);
+    printf("    source_port: %u\n", packet->source_port);
+    printf("    destination_port: %u\n", packet->destination_port);
+    printf("    sequence_number: %u\n", packet->sequence_number);
+    printf("    acknowledgment_number: %u\n", packet->acknowledgment_number);
+    printf("    data_offset: %u\n", packet->data_offset);
+    printf("    reserved: %u\n", packet->reserved);
+    printf("    flags: %02x\n", packet->flags);
+    printf("    window: %u\n", packet->window);
     printf("    checksum: %04x\n", packet->checksum);
-    printf("    urgent_pointer: %d\n", packet->urgent_pointer);
+    printf("    urgent_pointer: %u\n", packet->urgent_pointer);
     // ... data
+    if (packet->data && packet->data_len > 0) {
+        printf("    data_len: %d\n", packet->data_len);
+        printf("    data (hex): ");
+        for (size_t i = 0; i < packet->data_len; i++) {
+            printf("%02x ", packet->data[i]);
+            if((i + 1) % 16 == 0) printf("\n                "); // Newline every 16 bytes
+        }
+        printf("\n");
+    } else {
+        printf("    data: none\n");
+    }
 }
 
 // Prints the buf with the ip and tcp parts delimited
