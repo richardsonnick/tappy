@@ -11,7 +11,7 @@
 #include "utils.h"
 #include "tcp.h"
 
-void server_loop(int port) {
+void server_loop(int filter_src_port, int filter_dst_port) {
     printf("Running server...\n");
     int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
     if (sockfd < 0) {
@@ -31,7 +31,6 @@ void server_loop(int port) {
             continue; // just keep failing.
         }
 
-        print_raw_buf(buf, buf_len);
         tcp_ip_t* tcp_ip = malloc(sizeof(tcp_ip_t));
         tcp_ip->ip_header = malloc(sizeof(ip_header_t));
         tcp_ip->tcp_packet = malloc(sizeof(tcp_packet_t));
@@ -41,12 +40,15 @@ void server_loop(int port) {
         tcp_buf_to_packet(buf + 20, tcp_len, tcp_ip->tcp_packet);
 
         // size_t got_tcp_len = tcp_ip_from_buf(buf, buf_len, tcp_ip);
-        if (1) {
+        if (tcp_ip->tcp_packet->source_port == filter_src_port && 
+            tcp_ip->tcp_packet->destination_port == filter_dst_port) {
             printf("Got TCP packet:\n");
             printf("IP Header:\n");
             print_ip_header(tcp_ip->ip_header);
             printf("TCP Packet:\n");
             print_tcp_packet(tcp_ip->tcp_packet);
+            printf("Buffer:\n");
+            print_raw_buf(buf, buf_len);
         }
         free(tcp_ip->ip_header);
         free(tcp_ip->tcp_packet);

@@ -31,7 +31,7 @@ int main(int argc, char *argv[]){
             printf("Failed to open tun device\n");
             return -1;
         }
-        server_loop(8081);
+        server_loop(8080, 8081);
     }
 
     close(fd);

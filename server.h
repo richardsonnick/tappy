@@ -1,1 +1,1 @@
-void server_loop(int netdev_fd);
+void server_loop(int filter_src_port, int filter_dst_port);
