@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "server.h"
 #include "client.h"
+#include "types.h"
 
 int main(int argc, char *argv[]){
     if (argc < 2) {
@@ -31,7 +32,19 @@ int main(int argc, char *argv[]){
             printf("Failed to open tun device\n");
             return -1;
         }
-        server_loop(8080, 8081);
+        ip_addr_t source_ip = {
+            192,
+            168,
+            1,
+            246
+        };
+        ip_addr_t destination_ip = {
+            192,
+            168,
+            1,
+            246
+        };
+        server_loop(&source_ip, &destination_ip, 8080, 8081);
     }
 
     close(fd);

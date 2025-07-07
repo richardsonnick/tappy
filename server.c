@@ -10,8 +10,11 @@
 #include "io.h"
 #include "utils.h"
 #include "tcp.h"
+#include "server_state_machine.h"
 
-void server_loop(int filter_src_port, int filter_dst_port) {
+void server_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip, 
+    int src_port,
+    int dst_port) {
     printf("Running server...\n");
     int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
     if (sockfd < 0) {
@@ -21,6 +24,11 @@ void server_loop(int filter_src_port, int filter_dst_port) {
     uint8_t buf[4096];
     struct sockaddr_in sender_addr;
     socklen_t sender_len = sizeof(sender_addr);
+
+    tcp_connection_t* conn = init_tcp_stack(source_ip,
+        destination_ip, 
+        src_port,
+        dst_port, LISTEN);
 
     while (1) {
         // TODO: Make this read op a callback.
@@ -35,13 +43,14 @@ void server_loop(int filter_src_port, int filter_dst_port) {
         tcp_ip->ip_header = malloc(sizeof(ip_header_t));
         tcp_ip->tcp_packet = malloc(sizeof(tcp_packet_t));
         ip_buf_to_packet(buf, 20, tcp_ip->ip_header);
-        //TODO write tcp_buf_to_packet and use here
         size_t tcp_len = tcp_ip->ip_header->total_length - MIN_IP4_HEADER_SIZE;
         tcp_buf_to_packet(buf + 20, tcp_len, tcp_ip->tcp_packet);
 
-        // size_t got_tcp_len = tcp_ip_from_buf(buf, buf_len, tcp_ip);
-        if (tcp_ip->tcp_packet->source_port == filter_src_port && 
-            tcp_ip->tcp_packet->destination_port == filter_dst_port) {
+        if (tcp_ip->tcp_packet->source_port == src_port && 
+            tcp_ip->tcp_packet->destination_port == dst_port) {
+            // RECEIVE event
+            conn->state = server_handle_event(conn, RECEIVE, tcp_ip);
+
             printf("Got TCP packet:\n");
             printf("IP Header:\n");
             print_ip_header(tcp_ip->ip_header);

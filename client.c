@@ -14,12 +14,11 @@ void send_syn(int netdev_fd) {
     printf("Sending syn... ");
     ip_addr_t source_ip = {192, 168, 1, 246};
     ip_addr_t destination_ip = {192, 168, 1, 246};
-    tcp_connection_t conn = {.state=CLOSED,.netdev_fd=netdev_fd};
-    conn.tcb = init_tcp_stack(&source_ip, &destination_ip,
+    tcp_connection_t* conn = init_tcp_stack(&source_ip, &destination_ip,
                 8080,  //source port
-                8081 // destination port
-                );
-    TCP_STATE state = client_handle_event(&conn, OPEN, NULL);
+                8081, // destination port
+                CLOSED);
+    TCP_STATE state = client_handle_event(conn, OPEN, NULL);
 }
 
 void client_loop(int netdev_fd) {

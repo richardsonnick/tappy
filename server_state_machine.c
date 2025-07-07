@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "state_machine.h"
 #include "server_state_machine.h"
 #include "tcp.h"
@@ -11,12 +12,13 @@ void server_teardown(tcp_connection_t* conn) {
 
 
 // TODO: There are parts here where i should check for ack of something rather than just ack.
-TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp_packet_t* packet) {
+TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp_ip_t* tcp_ip) {
+    tcp_packet_t* packet = tcp_ip->tcp_packet;
     switch(conn->state) {
         case(CLOSED):
             if (event == OPEN) {
                 // Passive OPEN (listen for syn)
-                // conn->tcb = init_tcp_stack();
+                printf("Transitioned to OPEN state. Initialized TCB. LISTENING...");
                 return LISTEN;
             }
             break;

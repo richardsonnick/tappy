@@ -10,8 +10,9 @@
 
 #include "tcp.h"
 
-tcb_t* init_tcp_stack(ip_addr_t* source_ip, ip_addr_t* destination_ip,
-                    const uint16_t source_port, const uint16_t destination_port) {
+tcp_connection_t* init_tcp_stack(ip_addr_t* source_ip, ip_addr_t* destination_ip,
+                    const uint16_t source_port, const uint16_t destination_port, TCP_STATE init_state) {
+    tcp_connection_t* conn = malloc(sizeof(tcp_connection_t));
     tcb_t* tcb = malloc(sizeof(tcb_t));
     if (!tcb) return NULL;
 
@@ -24,7 +25,11 @@ tcb_t* init_tcp_stack(ip_addr_t* source_ip, ip_addr_t* destination_ip,
     tcb->source_port = source_port;
     tcb->destination_port = destination_port;
 
-    return tcb;
+    conn->tcb = tcb;
+
+    conn->state = init_state;
+
+    return conn;
 }
 
 tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags) {
