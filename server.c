@@ -23,6 +23,7 @@ void server_loop(int port) {
     socklen_t sender_len = sizeof(sender_addr);
 
     while (1) {
+        // TODO: Make this read op a callback.
         ssize_t buf_len = recvfrom(sockfd, buf, sizeof(buf), 0,
                             (struct sockaddr*)&sender_addr, &sender_len);
         if (buf_len < 0) {
