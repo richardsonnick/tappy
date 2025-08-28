@@ -24,7 +24,9 @@ int main(int argc, char *argv[]){
             return -1;
         }
         // client_loop(fd);
-        send_syn(fd);
+        ip_addr_t source_ip = {192, 168, 1, 130};
+        ip_addr_t destination_ip = {192, 168, 1, 130};
+        send_syn(fd, &source_ip, &destination_ip);
     }
     else if (strcmp(argv[1], "server") == 0) {
         char dev_server[IFNAMSIZ] = "tun1";
@@ -36,13 +38,13 @@ int main(int argc, char *argv[]){
             192,
             168,
             1,
-            246
+            130
         };
         ip_addr_t destination_ip = {
             192,
             168,
             1,
-            246
+            130
         };
         server_loop(&source_ip, &destination_ip, 8080, 8081);
     }

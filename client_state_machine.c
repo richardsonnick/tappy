@@ -27,7 +27,7 @@ void syn(const tcp_connection_t* conn) {
     uint8_t* buf = malloc(total_packet_len);
     tcp_ip_to_buf(tcp_ip, buf);
     print_raw_buf(buf, total_packet_len);
-    send_packet_raw(sockfd, buf, total_packet_len, "192.168.1.246");
+    send_packet_raw(sockfd, buf, total_packet_len, "192.168.1.130");
     close(sockfd);
     free(buf);
     // do_write(tcp_ip, conn->netdev_fd);
@@ -38,7 +38,7 @@ TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
     switch(conn->state) {
         case(CLOSED):
             if (event == OPEN) {
-                printf("Got OPEN from CLOSED state.\n");
+                printf("Got OPEN from CLOSED state!!\n");
                 // Passive OPEN (listen for syn)
                 syn(conn);
                 return SYN_SENT;
