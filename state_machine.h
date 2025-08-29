@@ -35,6 +35,8 @@ typedef enum {
 typedef struct {
     uint8_t* data;
     size_t length;
+    size_t write_pos;
+    size_t read_pos;
 } tcp_buffer_t;
 
 typedef struct {
