@@ -23,5 +23,6 @@ size_t tcp_ip_to_buf(const tcp_ip_t* tcp_ip, uint8_t* buf);
 void process_received_packet(tcb_t* tcb, tcp_packet_t* received_packet);
 
 void simple_send(const tcp_connection_t* conn, tcp_flag_bits_t flags, const uint8_t* data, const size_t data_len);
+bool store_received_data(tcb_t* tcb, const tcp_packet_t* packet);
 
 #endif

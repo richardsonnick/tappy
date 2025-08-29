@@ -1,3 +1,4 @@
+#include "state_machine.h"
 #include "types.h"
 #include <fcntl.h>
 #include <string.h>
@@ -82,8 +83,12 @@ tcp_connection_t* init_tcp_stack(ip_addr_t* source_ip, ip_addr_t* destination_ip
 
     tcb->recv_buf.data = calloc(TCP_BUF_SIZE, sizeof(uint8_t));
     tcb->recv_buf.length = TCP_BUF_SIZE;
+    tcb->recv_buf.read_pos = 0;
+    tcb->recv_buf.write_pos = 0;
     tcb->send_buf.data = calloc(TCP_BUF_SIZE, sizeof(uint8_t));
     tcb->send_buf.length = TCP_BUF_SIZE;
+    tcb->send_buf.read_pos = 0;
+    tcb->send_buf.write_pos = 0;
     tcb->source_ip = source_ip;
     tcb->destination_ip = destination_ip;
     tcb->source_port = source_port;
@@ -466,4 +471,22 @@ void simple_send(const tcp_connection_t* conn, tcp_flag_bits_t flags, const uint
     const size_t total_packet_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE + data_len;
     send_tcp_ip(tcp_ip, total_packet_len);
     update_sequence_number(conn->tcb, flags, tcp_ip->tcp_packet->data_len);
+}
+
+bool store_received_data(tcb_t* tcb, const tcp_packet_t* packet) {
+  if (!packet->data || packet->data == 0) {
+    return true; // no data so whatevs
+  }
+
+  if (tcb->recv_buf.write_pos + packet->data_len >= TCP_BUF_SIZE) {
+    printf("Dropped data from packet. Receive buffer full\n");
+    return false;
+  }
+
+  memcpy(tcb->recv_buf.data + tcb->recv_buf.write_pos, packet->data, packet->data_len);
+
+  tcb->recv_buf.write_pos += packet->data_len;
+
+  printf("Stored %zu bytes in the receive buffer\n", packet->data_len);
+  return true;
 }

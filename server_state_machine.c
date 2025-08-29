@@ -75,7 +75,7 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
                 printf("Sent FIN\n");
                 return FIN_WAIT_1;
             } else if (event == RECEIVE) {
-              // TODO do something with the data
+              store_received_data(conn->tcb, packet);
               printf("received some data idk\n");
             }
             break;
