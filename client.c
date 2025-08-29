@@ -65,8 +65,8 @@ void client_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip,
         tcp_buf_to_packet(buf + 20, tcp_len, tcp_ip->tcp_packet);
 
         // The condition here is prob unneccsary i imagine the kernel does this for me.
-        if (tcp_ip->tcp_packet->source_port == src_port && 
-            tcp_ip->tcp_packet->destination_port == dst_port) {
+        if (tcp_ip->tcp_packet->source_port == dst_port && 
+            tcp_ip->tcp_packet->destination_port == src_port) {
             // RECEIVE event
             conn->state = client_handle_event(conn, RECEIVE, tcp_ip);
 

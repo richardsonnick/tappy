@@ -27,6 +27,17 @@ TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
       packet = tcp_ip->tcp_packet;
     }
 
+    if (packet != NULL) {
+        printf("TCP Packet Flags: ");
+        if (packet->flags & TCP_FLAG_FIN) printf("FIN ");
+        if (packet->flags & TCP_FLAG_SYN) printf("SYN ");
+        if (packet->flags & TCP_FLAG_RST) printf("RST ");
+        if (packet->flags & TCP_FLAG_PSH) printf("PSH ");
+        if (packet->flags & TCP_FLAG_ACK) printf("ACK ");
+        if (packet->flags & TCP_FLAG_URG) printf("URG ");
+        printf("(0x%02x)\n", packet->flags);
+    }
+
     switch(conn->state) {
         case(CLOSED):
             if (event == OPEN) {
