@@ -25,20 +25,9 @@ int main(int argc, char *argv[]){
 
     // printf("Created tun fd:%d\n", fd);
     if (strcmp(argv[1], "client") == 0) {
-        char dev_client[IFNAMSIZ] = "tun0";
-        if ( (fd = tun_alloc(dev_client)) < 0) {
-            printf("Failed to open tun device\n");
-            return -1;
-        }
-        // client_loop(fd);
-        send_syn(fd, &source_ip, &destination_ip);
+        client_loop(&source_ip, &destination_ip, 8081, 8080);
     }
     else if (strcmp(argv[1], "server") == 0) {
-        char dev_server[IFNAMSIZ] = "tun1";
-        if ( (fd = tun_alloc(dev_server)) < 0) {
-            printf("Failed to open tun device\n");
-            return -1;
-        }
         server_loop(&source_ip, &destination_ip, 8080, 8081);
     }
 

@@ -20,7 +20,13 @@ void do_write(const tcp_ip_t* tcp_ip, int netdev_fd) {
 }
 
 // TODO: There are parts here where i should check for ack of something rather than just ack.
-TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp_packet_t* packet) {
+TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp_ip_t* tcp_ip) {
+    // TODO Add actual error handling.
+    tcp_packet_t* packet = NULL;
+    if (tcp_ip != NULL) {
+      packet = tcp_ip->tcp_packet;
+    }
+
     switch(conn->state) {
         case(CLOSED):
             if (event == OPEN) {
@@ -41,6 +47,7 @@ TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
             if (event == RECEIVE && packet->flags == TCP_FLAG_SYN) {
                 return SYN_RECEIVED;
             } else if (event == RECEIVE && packet->flags == TCP_FLAG_SYN | TCP_FLAG_ACK) {
+              printf("Got SYN,ACK from SYN_SENT state!\n");
                 // TODO send ACK
                 return ESTABLISHED;
             }
