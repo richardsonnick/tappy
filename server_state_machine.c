@@ -38,7 +38,6 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
             break;
         case(LISTEN):
             if (event == RECEIVE && packet->flags == TCP_FLAG_SYN) { 
-                // TODO: send syn, ack
                 printf("SYN_RECEIVED\n");
                 simple_send_flag(conn, TCP_FLAG_SYN | TCP_FLAG_ACK);
                 return SYN_RECEIVED;
@@ -48,7 +47,8 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
             if (event == RECEIVE && packet->flags == TCP_FLAG_SYN) {
                 return SYN_RECEIVED;
             } else if (event == RECEIVE && packet->flags == TCP_FLAG_SYN | TCP_FLAG_ACK) {
-                // TODO send ACK
+                simple_send_flag(conn, TCP_FLAG_ACK);
+                printf("Sent ACK to complete handshake\n");
                 return ESTABLISHED;
             }
             break;
