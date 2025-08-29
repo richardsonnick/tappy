@@ -45,7 +45,7 @@ void client_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip,
         src_port,
         dst_port, CLOSED);
 
-    TCP_STATE state = client_handle_event(conn, OPEN, NULL);
+    conn->state = client_handle_event(conn, OPEN, NULL);
 
     // LISTENing loop
     while (1) {

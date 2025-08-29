@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include "types.h"
+#include "state_machine.h"
 #include <stdbool.h>
 
 void print_ip_header(const ip_header_t* ip_header);
@@ -21,5 +22,7 @@ uint32_t to_ip_encoding(const ip_addr_t* ip_addr);
 
 ip_addr_t from_ip_encoding(const uint32_t ip);
 void print_tcp_packet(const tcp_packet_t* packet);
+const char* tcp_state_to_string(TCP_STATE state);
+void print_conn(const tcp_connection_t* conn, const char* context);
 
 #endif // UTILS_H

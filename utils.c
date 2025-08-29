@@ -169,3 +169,24 @@ ip_addr_t from_ip_encoding(const uint32_t ip){
     };
     return ip_addr;
 }
+
+const char* tcp_state_to_string(TCP_STATE state) {
+    switch(state) {
+        case LISTEN: return "LISTEN";
+        case SYN_SENT: return "SYN_SENT";
+        case SYN_RECEIVED: return "SYN_RECEIVED";
+        case ESTABLISHED: return "ESTABLISHED";
+        case FIN_WAIT_1: return "FIN_WAIT_1";
+        case FIN_WAIT_2: return "FIN_WAIT_2";
+        case CLOSE_WAIT: return "CLOSE_WAIT";
+        case CLOSING: return "CLOSING";
+        case LAST_ACK: return "LAST_ACK";
+        case TIME_WAIT: return "TIME_WAIT";
+        case CLOSED: return "CLOSED";
+        default: return "UNKNOWN";
+    }
+}
+
+void print_conn(const tcp_connection_t* conn, const char* context) {
+    printf("%s - Current state: %s\n", context, tcp_state_to_string(conn->state));
+}
