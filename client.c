@@ -18,15 +18,6 @@
 
 #include "client.h"
 
-void send_syn(int netdev_fd, ip_addr_t* source_ip, ip_addr_t* destination_ip) {
-    printf("Sending syn... ");
-    tcp_connection_t* conn = init_tcp_stack(source_ip, destination_ip,
-                8080,  //source port
-                8081, // destination port
-                CLOSED);
-    TCP_STATE state = client_handle_event(conn, OPEN, NULL);
-}
-
 // TODO make this loop common bw server and client
 void client_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip, 
     int src_port,
