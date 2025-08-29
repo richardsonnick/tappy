@@ -2,3 +2,4 @@ tappy
 *.o
 settings.json
 .vscode
+*.swp
