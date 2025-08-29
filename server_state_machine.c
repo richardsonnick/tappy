@@ -13,14 +13,19 @@ void server_teardown(tcp_connection_t* conn) {
 
 // TODO: There are parts here where i should check for ack of something rather than just ack.
 TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp_ip_t* tcp_ip) {
-    tcp_packet_t* packet = tcp_ip->tcp_packet;
+    // TODO Add actual error handling.
+    tcp_packet_t* packet = NULL;
+    if (tcp_ip != NULL) {
+      packet = tcp_ip->tcp_packet;
+    }
+
     switch(conn->state) {
         case(CLOSED):
             if (event == OPEN) {
                 // Passive OPEN (listen for syn)
-                printf("Transitioned to OPEN state. Initialized TCB. LISTENING...");
+                printf("Transitioned to OPEN state. Initialized TCB. LISTENING...\n");
                 return LISTEN;
-            }
+           }
             break;
         case(LISTEN):
             if (event == RECEIVE && packet->flags == TCP_FLAG_SYN) { 
