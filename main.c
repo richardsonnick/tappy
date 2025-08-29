@@ -15,6 +15,13 @@ int main(int argc, char *argv[]){
     }
 
     int fd;
+    if (argc < 4) {
+        printf("Usage: %s <client|server> <source_ip> <destination_ip>\n", argv[0]);
+        return -1;
+    }
+    ip_addr_t source_ip, destination_ip;
+    sscanf(argv[2], "%hhu.%hhu.%hhu.%hhu", &source_ip.a, &source_ip.b, &source_ip.c, &source_ip.d);
+    sscanf(argv[3], "%hhu.%hhu.%hhu.%hhu", &destination_ip.a, &destination_ip.b, &destination_ip.c, &destination_ip.d);
 
     // printf("Created tun fd:%d\n", fd);
     if (strcmp(argv[1], "client") == 0) {
@@ -24,8 +31,6 @@ int main(int argc, char *argv[]){
             return -1;
         }
         // client_loop(fd);
-        ip_addr_t source_ip = {192, 168, 1, 130};
-        ip_addr_t destination_ip = {192, 168, 1, 130};
         send_syn(fd, &source_ip, &destination_ip);
     }
     else if (strcmp(argv[1], "server") == 0) {
@@ -34,18 +39,6 @@ int main(int argc, char *argv[]){
             printf("Failed to open tun device\n");
             return -1;
         }
-        ip_addr_t source_ip = {
-            192,
-            168,
-            1,
-            130
-        };
-        ip_addr_t destination_ip = {
-            192,
-            168,
-            1,
-            130
-        };
         server_loop(&source_ip, &destination_ip, 8080, 8081);
     }
 
