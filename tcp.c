@@ -104,6 +104,7 @@ tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags, const uint8_t* data
         tcp_ip->tcp_packet = calloc(1, sizeof(tcp_packet_t));
         uint32_t src_ip_encoded = to_ip_encoding(tcb->source_ip);
         uint32_t dst_ip_encoded = to_ip_encoding(tcb->destination_ip);
+        size_t total_tcp_len = MIN_TCP_PACKET_SIZE + data_len;
 
         tcp_ip->ip_header->version = 4;
         tcp_ip->ip_header->ihl = 5; // header length in 32 bit (4 bytes) words i.e. ihl == 5 implies (5 * 4) 20 byte header
@@ -129,10 +130,6 @@ tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags, const uint8_t* data
         tcp_ip->tcp_packet->window = 0x00;
         tcp_ip->tcp_packet->checksum = 0x00;
         tcp_ip->tcp_packet->urgent_pointer = 0x00;
-        tcp_ip->tcp_packet->checksum = compute_tcp_packet_checksum(tcp_ip->tcp_packet, 
-            src_ip_encoded, 
-            dst_ip_encoded, 
-            (uint16_t)MIN_TCP_PACKET_SIZE);
         tcp_ip->tcp_packet->data_len = 0x00;
 
         if (data && data_len > 0) {
@@ -143,6 +140,11 @@ tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags, const uint8_t* data
           tcp_ip->tcp_packet->data = NULL;
           tcp_ip->tcp_packet->data_len = 0;
         }
+
+        tcp_ip->tcp_packet->checksum = compute_tcp_packet_checksum(tcp_ip->tcp_packet, 
+            src_ip_encoded, 
+            dst_ip_encoded, 
+            (uint16_t)total_tcp_len);
 
         return tcp_ip;
 }
