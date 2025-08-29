@@ -58,7 +58,7 @@ void send_packet_raw(int sockfd, uint8_t* buf, size_t buf_len,
 void write_to_dev(int netdev_fd, uint8_t* buf, size_t buf_len) {
     // TODO: gate this with debug
     print_raw_buf(buf, buf_len);
-    ssize_t written = write(netdev_fd, buf, buf_len);
+    size_t written = write(netdev_fd, buf, buf_len);
     if (written != buf_len) {
         perror("write");
     }

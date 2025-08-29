@@ -360,8 +360,6 @@ bool tcp_buf_to_packet(const uint8_t* buf, size_t len, tcp_packet_t* out_packet)
     out_packet->urgent_pointer = (((uint16_t)buf[i++] & 0x00FF) | out_packet->urgent_pointer); 
 
     // Read data
-    uint8_t header_len = out_packet->data_offset * 4;
-
     if (i < len) {
         out_packet->data_len = len - i;
         if (out_packet->data_len > 0) {

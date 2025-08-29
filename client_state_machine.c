@@ -53,7 +53,7 @@ TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
         case(SYN_SENT):
             if (event == RECEIVE && packet->flags == TCP_FLAG_SYN) {
                 return SYN_RECEIVED;
-            } else if (event == RECEIVE && packet->flags == TCP_FLAG_SYN | TCP_FLAG_ACK) {
+            } else if (event == RECEIVE && (packet->flags == (TCP_FLAG_SYN | TCP_FLAG_ACK))) {
                 printf("Got SYN,ACK from SYN_SENT state!\n");
                 process_received_packet(conn->tcb, tcp_ip->tcp_packet);
                 simple_send(conn, TCP_FLAG_ACK, NULL, 0);
