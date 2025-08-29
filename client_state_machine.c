@@ -12,14 +12,6 @@ void client_teardown(tcp_connection_t* conn) {
     conn->tcb = NULL;
 }
 
-void do_write(const tcp_ip_t* tcp_ip, int netdev_fd) {
-    const size_t total_tcp_segment_len = MIN_TCP_PACKET_SIZE;
-    const size_t total_packet_len = MIN_IP4_HEADER_SIZE + total_tcp_segment_len;
-    uint8_t* buf = (uint8_t*)malloc(total_packet_len);
-    size_t buf_len = tcp_ip_to_buf(tcp_ip, buf);
-    write_to_dev(netdev_fd, buf, total_packet_len);
-}
-
 // TODO: There are parts here where i should check for ack of something rather than just ack.
 TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp_ip_t* tcp_ip) {
     print_conn(conn, "client_handle_event");
