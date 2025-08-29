@@ -12,6 +12,23 @@
 #include "tcp.h"
 #include "server_state_machine.h"
 
+void print_received_data(const tcb_t* tcb) {
+  if (tcb->recv_buf.read_pos < tcb->recv_buf.write_pos) {
+    printf("wtf\n");
+    size_t data_len = tcb->recv_buf.write_pos - tcb->recv_buf.read_pos;
+    printf("Received data (%zu bytes): \n", data_len);
+    for (size_t i = tcb->recv_buf.read_pos; i < tcb->recv_buf.write_pos; i++) {
+      char c = tcb->recv_buf.data[i];
+      if (c >= 32 && c <= 126) { // Printable ASCII
+        printf("%c", c);
+      } else {
+        printf("\\x%02x", (unsigned char)c); // Non-printable as hex
+      }
+    }
+    printf("\n");
+  }
+}
+
 void server_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip, 
     int src_port,
     int dst_port) {
@@ -54,6 +71,7 @@ void server_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip,
             tcp_ip->tcp_packet->destination_port == src_port) {
             // RECEIVE event
             conn->state = server_handle_event(conn, RECEIVE, tcp_ip);
+            print_received_data(conn->tcb);
 
             // SILENCE!
             if (0) {
