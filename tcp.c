@@ -6,10 +6,73 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+#include <time.h>
+#include <sys/time.h>
+#include "hash/sha1_c.h" // boogie!
+
 #include "utils.h"
 
 #include "tcp.h"
 #include "io.h"
+
+static uint32_t sha1_hash(uint32_t local_ip, uint16_t local_port,
+    uint32_t remote_ip, uint16_t remote_port, uint32_t secret_key) {
+      // TODO use boogie::sha1;
+      uint8_t input[18];
+
+      input[0] = (local_ip >> 24) & 0xFF;
+      input[1] = (local_ip >> 16) & 0xFF;
+      input[2] = (local_ip >> 8) & 0xFF;
+      input[3] = local_ip & 0xFF;
+
+      input[4] = (local_port >> 8) & 0xFF;
+      input[5] = local_port & 0xFF;
+
+      input[6] = (remote_ip >> 24) & 0xFF;
+      input[7] = (remote_ip >> 16) & 0xFF;
+      input[8] = (remote_ip >> 8) & 0xFF;
+      input[9] = remote_ip & 0xFF;
+
+      input[10] = (remote_port >> 8) & 0xFF;
+      input[11] = remote_port & 0xFF;
+
+      input[12] = (secret_key >> 24) & 0xFF;
+      input[13] = (secret_key >> 16) & 0xFF;
+      input[14] = (secret_key >> 8) & 0xFF;
+      input[15] = secret_key & 0xFF;
+
+      input[16] = 0x00; // Padding
+      input[17] = 0x00; // Padding
+
+      uint8_t hash_output[40]; // SHA-1 produces a 20-byte hash
+      int result = sha1_hash_data(input, sizeof(input), hash_output);
+      if (result != 0) {
+          fprintf(stderr, "SHA1 hash failed\n");
+          return 0;
+      }
+
+    
+      uint32_t hash_value = (hash_output[0] << 24) |
+                            (hash_output[1] << 16) |
+                            (hash_output[2] << 8) |
+                            hash_output[3];
+
+      return hash_value;
+}
+
+// From https://www.rfc-editor.org/rfc/rfc6528.txt
+uint32_t generate_isn(const tcb_t* tcb) {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  uint32_t M = (tv.tv_sec * 1000000 + tv.tv_usec);
+  static uint32_t secret_key = 0x12345678; // In practice, this should be random and secret. But I am lazy.
+  uint32_t local_ip = to_ip_encoding(tcb->source_ip);
+  uint32_t remote_ip = to_ip_encoding(tcb->destination_ip);
+  uint32_t F = sha1_hash(to_ip_encoding(tcb->source_ip), tcb->source_port,
+      to_ip_encoding(tcb->destination_ip), tcb->destination_port, secret_key);
+  uint32_t isn =  M + F;
+  return isn;
+};
 
 tcp_connection_t* init_tcp_stack(ip_addr_t* source_ip, ip_addr_t* destination_ip,
                     const uint16_t source_port, const uint16_t destination_port, TCP_STATE init_state) {
@@ -25,6 +88,7 @@ tcp_connection_t* init_tcp_stack(ip_addr_t* source_ip, ip_addr_t* destination_ip
     tcb->destination_ip = destination_ip;
     tcb->source_port = source_port;
     tcb->destination_port = destination_port;
+    tcb->seq_num = generate_isn(tcb);
 
     conn->tcb = tcb;
 
@@ -56,7 +120,7 @@ tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags) {
 
         tcp_ip->tcp_packet->source_port = tcb->source_port;
         tcp_ip->tcp_packet->destination_port = tcb->destination_port;
-        tcp_ip->tcp_packet->sequence_number = 0x00;
+        tcp_ip->tcp_packet->sequence_number = tcb->seq_num;
         tcp_ip->tcp_packet->acknowledgment_number = 0x00;
         tcp_ip->tcp_packet->data_offset = (MIN_TCP_PACKET_SIZE / 4); // data offset in 4 byte words (words == 32 bits)
         tcp_ip->tcp_packet->reserved = 0x00;
