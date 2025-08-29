@@ -44,18 +44,18 @@ static uint32_t sha1_hash(uint32_t local_ip, uint16_t local_port,
       input[16] = 0x00; // Padding
       input[17] = 0x00; // Padding
 
-      uint8_t hash_output[40]; // SHA-1 produces a 20-byte hash
+      char hash_output[41]; // SHA-1 produces a 20-byte hash hex string + null term
       int result = sha1_hash_data(input, sizeof(input), hash_output);
       if (result != 0) {
           fprintf(stderr, "SHA1 hash failed\n");
           return 0;
       }
 
+      char hex_substr[9];
+      strncpy(hex_substr, hash_output, 8);
+      hex_substr[8] = '\0';
     
-      uint32_t hash_value = (hash_output[0] << 24) |
-                            (hash_output[1] << 16) |
-                            (hash_output[2] << 8) |
-                            hash_output[3];
+      uint32_t hash_value = (uint32_t)strtoul(hex_substr, NULL, 16);
 
       return hash_value;
 }
@@ -98,9 +98,9 @@ tcp_connection_t* init_tcp_stack(ip_addr_t* source_ip, ip_addr_t* destination_ip
 }
 
 tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags) {
-        tcp_ip_t* tcp_ip = malloc(sizeof(tcp_ip_t));
-        tcp_ip->ip_header = malloc(sizeof(ip_addr_t));
-        tcp_ip->tcp_packet = malloc(sizeof(tcp_packet_t));
+        tcp_ip_t* tcp_ip = calloc(1, sizeof(tcp_ip_t));
+        tcp_ip->ip_header = calloc(1, sizeof(ip_header_t));
+        tcp_ip->tcp_packet = calloc(1, sizeof(tcp_packet_t));
         uint32_t src_ip_encoded = to_ip_encoding(tcb->source_ip);
         uint32_t dst_ip_encoded = to_ip_encoding(tcb->destination_ip);
 
