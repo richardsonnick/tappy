@@ -67,8 +67,6 @@ uint32_t generate_isn(const tcb_t* tcb) {
   gettimeofday(&tv, NULL);
   uint32_t M = (tv.tv_sec * 1000000 + tv.tv_usec);
   static uint32_t secret_key = 0x12345678; // In practice, this should be random and secret. But I am lazy.
-  uint32_t local_ip = to_ip_encoding(tcb->source_ip);
-  uint32_t remote_ip = to_ip_encoding(tcb->destination_ip);
   uint32_t F = sha1_hash(to_ip_encoding(tcb->source_ip), tcb->source_port,
       to_ip_encoding(tcb->destination_ip), tcb->destination_port, secret_key);
   uint32_t isn =  M + F;
