@@ -98,7 +98,7 @@ tcp_connection_t* init_tcp_stack(ip_addr_t* source_ip, ip_addr_t* destination_ip
     return conn;
 }
 
-tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags) {
+tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags, const uint8_t* data, const size_t data_len) {
         tcp_ip_t* tcp_ip = calloc(1, sizeof(tcp_ip_t));
         tcp_ip->ip_header = calloc(1, sizeof(ip_header_t));
         tcp_ip->tcp_packet = calloc(1, sizeof(tcp_packet_t));
@@ -135,9 +135,19 @@ tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags) {
             (uint16_t)MIN_TCP_PACKET_SIZE);
         tcp_ip->tcp_packet->data_len = 0x00;
 
+        if (data && data_len > 0) {
+          tcp_ip->tcp_packet->data = malloc(data_len);
+          memcpy(tcp_ip->tcp_packet->data, data, data_len);
+          tcp_ip->tcp_packet->data_len = data_len;
+        } else {
+          tcp_ip->tcp_packet->data = NULL;
+          tcp_ip->tcp_packet->data_len = 0;
+        }
+
         return tcp_ip;
 }
 
+// TODO remove
 uint8_t* data_to_tcp_buf(const uint8_t* data, const size_t data_len, 
     const ip_addr_t* source_ip,
     const ip_addr_t* destination_ip,
@@ -518,7 +528,7 @@ void process_received_packet(tcb_t* tcb, tcp_packet_t* received_packet) {
 
 
 void simple_send_flag(const tcp_connection_t* conn, tcp_flag_bits_t flags) {
-    tcp_ip_t* tcp_ip = make_packet(conn->tcb, flags);
+    tcp_ip_t* tcp_ip = make_packet(conn->tcb, flags, NULL, 0);
     printf("Sending TCP Packet: ");
     print_tcp_packet(tcp_ip->tcp_packet);
     const size_t total_packet_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE;

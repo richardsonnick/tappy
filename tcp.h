@@ -8,7 +8,7 @@
 tcp_connection_t* init_tcp_stack(ip_addr_t* source_ip, ip_addr_t* destination_ip,
         const uint16_t source_port, const uint16_t destination_port, TCP_STATE init_state);
 
-tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags);
+tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags, const uint8_t* data, const size_t data_len);
 
 uint8_t* data_to_tcp_buf(const uint8_t* data, const size_t data_len, 
     const ip_addr_t* source_ip,
