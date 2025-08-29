@@ -132,6 +132,7 @@ tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags) {
             src_ip_encoded, 
             dst_ip_encoded, 
             (uint16_t)MIN_TCP_PACKET_SIZE);
+        tcp_ip->tcp_packet->data_len = 0x00;
 
         return tcp_ip;
 }
@@ -498,12 +499,20 @@ size_t tcp_ip_to_buf(const tcp_ip_t* tcp_ip, uint8_t* buf) {
     return bytes_written_ip + bytes_written_tcp;
 }
 
+void update_sequence_number(tcb_t* tcb, tcp_flag_bits_t flags, size_t data_len) {
+  if ((flags & TCP_FLAG_SYN) | (flags & TCP_FLAG_FIN)) {
+    tcb->seq_num += 1;
+  }
+
+  tcb->seq_num += data_len;
+}
+
 
 void simple_send_flag(const tcp_connection_t* conn, tcp_flag_bits_t flags) {
     tcp_ip_t* tcp_ip = make_packet(conn->tcb, flags);
     printf("Sending TCP Packet: ");
     print_tcp_packet(tcp_ip->tcp_packet);
-    // TODO: track a single socket for entire process.
     const size_t total_packet_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE;
     send_tcp_ip(tcp_ip, total_packet_len);
+    update_sequence_number(conn->tcb, flags, tcp_ip->tcp_packet->data_len);
 }
