@@ -30,6 +30,7 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
         case(LISTEN):
             if (event == RECEIVE && packet->flags == TCP_FLAG_SYN) { 
                 // TODO: send syn, ack
+                printf("SYN_RECEIVED\n");
                 return SYN_RECEIVED;
             }
             break;
