@@ -5,6 +5,7 @@
 #include "tcp.h"
 #include "io.h"
 #include "types.h"
+#include "utils.h"
 
 void server_teardown(tcp_connection_t* conn) {
     free(conn->tcb);
@@ -14,6 +15,8 @@ void server_teardown(tcp_connection_t* conn) {
 
 // TODO: There are parts here where i should check for ack of something rather than just ack.
 TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp_ip_t* tcp_ip) {
+    print_conn(conn, "server_handle_event");
+    
     // TODO Add actual error handling.
     tcp_packet_t* packet = NULL;
     if (tcp_ip != NULL) {
