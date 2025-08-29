@@ -55,6 +55,7 @@ void client_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip,
 
         if (conn->state == ESTABLISHED && !sent_data) {
           const char* test_data = "Hey man";
+          printf("Sending data: %s\n", test_data);
           simple_send(conn, TCP_FLAG_PSH | TCP_FLAG_SYN ,(const uint8_t*)test_data, strlen(test_data));
           sent_data = 1;
         }

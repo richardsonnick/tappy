@@ -119,6 +119,8 @@ tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags, const uint8_t* data
         tcp_ip->ip_header->source_address = src_ip_encoded;
         tcp_ip->ip_header->destination_address = dst_ip_encoded;
         tcp_ip->ip_header->header_checksum = compute_ip_checksum(tcp_ip->ip_header);
+        tcp_ip->ip_header->total_length = (uint16_t)(MIN_IP4_HEADER_SIZE + total_tcp_len);
+
 
         tcp_ip->tcp_packet->source_port = tcb->source_port;
         tcp_ip->tcp_packet->destination_port = tcb->destination_port;
@@ -127,7 +129,7 @@ tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags, const uint8_t* data
         tcp_ip->tcp_packet->data_offset = (MIN_TCP_PACKET_SIZE / 4); // data offset in 4 byte words (words == 32 bits)
         tcp_ip->tcp_packet->reserved = 0x00;
         tcp_ip->tcp_packet->flags = flags;
-        tcp_ip->tcp_packet->window = 0x00;
+        tcp_ip->tcp_packet->window = 1024;
         tcp_ip->tcp_packet->checksum = 0x00;
         tcp_ip->tcp_packet->urgent_pointer = 0x00;
         tcp_ip->tcp_packet->data_len = 0x00;
@@ -378,6 +380,7 @@ bool tcp_buf_to_packet(const uint8_t* buf, size_t len, tcp_packet_t* out_packet)
 
 size_t tcp_packet_to_buf(const tcp_packet_t* packet, uint8_t* buf, size_t buf_len) {
     size_t required_len = (packet->data_offset * 4) + packet->data_len;
+
     if (buf_len < required_len) {
         fprintf(stderr, "Buffer too small for tcp packet");
         return 0;
@@ -460,7 +463,7 @@ void simple_send(const tcp_connection_t* conn, tcp_flag_bits_t flags, const uint
     tcp_ip_t* tcp_ip = make_packet(conn->tcb, flags, data, data_len);
     printf("Sending TCP Packet: ");
     print_tcp_packet(tcp_ip->tcp_packet);
-    const size_t total_packet_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE;
+    const size_t total_packet_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE + data_len;
     send_tcp_ip(tcp_ip, total_packet_len);
     update_sequence_number(conn->tcb, flags, tcp_ip->tcp_packet->data_len);
 }
