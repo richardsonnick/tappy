@@ -8,6 +8,9 @@
 #include "client.h"
 #include "types.h"
 
+#define CLIENT_PORT 60000
+#define SERVER_PORT 60001
+
 int main(int argc, char *argv[]){
     if (argc < 2) {
         printf("Invalid arg len\n");
@@ -25,10 +28,10 @@ int main(int argc, char *argv[]){
 
     // printf("Created tun fd:%d\n", fd);
     if (strcmp(argv[1], "client") == 0) {
-        client_loop(&source_ip, &destination_ip, 8081, 8080);
+        client_loop(&source_ip, &destination_ip, CLIENT_PORT, SERVER_PORT);
     }
     else if (strcmp(argv[1], "server") == 0) {
-        server_loop(&source_ip, &destination_ip, 8080, 8081);
+        server_loop(&source_ip, &destination_ip, SERVER_PORT, CLIENT_PORT);
     }
 
     close(fd);
