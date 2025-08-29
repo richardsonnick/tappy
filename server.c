@@ -66,6 +66,7 @@ void server_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip,
               print_raw_buf(buf, buf_len);
             }
         }
+        // TODO try to implement without costly frees
         free(tcp_ip->ip_header);
         free(tcp_ip->tcp_packet);
         free(tcp_ip);

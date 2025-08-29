@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
 
 #include "types.h"
 #include "utils.h"
@@ -26,6 +27,16 @@ int create_raw_socket() {
         return -1;
     }
     return sockfd;
+}
+
+void send_tcp_ip(tcp_ip_t* tcp_ip, const size_t total_packet_len) {
+    int sockfd = create_raw_socket();
+    uint8_t* buf = malloc(total_packet_len);
+    tcp_ip_to_buf(tcp_ip, buf);
+    print_raw_buf(buf, total_packet_len);
+    send_packet_raw(sockfd, buf, total_packet_len, "192.168.1.130");
+    close(sockfd);
+    free(buf);
 }
 
 void send_packet_raw(int sockfd, uint8_t* buf, size_t buf_len,

@@ -22,15 +22,8 @@ void do_write(const tcp_ip_t* tcp_ip, int netdev_fd) {
 void syn(const tcp_connection_t* conn) {
     tcp_ip_t* tcp_ip = make_packet(conn->tcb, TCP_FLAG_SYN);
     // TODO: track a single socket for entire process.
-    int sockfd = create_raw_socket();
     const size_t total_packet_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE;
-    uint8_t* buf = malloc(total_packet_len);
-    tcp_ip_to_buf(tcp_ip, buf);
-    print_raw_buf(buf, total_packet_len);
-    send_packet_raw(sockfd, buf, total_packet_len, "192.168.1.130");
-    close(sockfd);
-    free(buf);
-    // do_write(tcp_ip, conn->netdev_fd);
+    send_tcp_ip(tcp_ip, total_packet_len);
 }
 
 // TODO: There are parts here where i should check for ack of something rather than just ack.
