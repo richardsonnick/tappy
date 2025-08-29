@@ -21,14 +21,8 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
     }
 
     if (packet != NULL) {
-        printf("RECEIVED TCP Packet Flags: ");
-        if (packet->flags & TCP_FLAG_FIN) printf("FIN ");
-        if (packet->flags & TCP_FLAG_SYN) printf("SYN ");
-        if (packet->flags & TCP_FLAG_RST) printf("RST ");
-        if (packet->flags & TCP_FLAG_PSH) printf("PSH ");
-        if (packet->flags & TCP_FLAG_ACK) printf("ACK ");
-        if (packet->flags & TCP_FLAG_URG) printf("URG ");
-        printf("(0x%02x)\n", packet->flags);
+        printf("RECEIVED TCP Packet: \n");
+        print_tcp_packet(tcp_ip->tcp_packet);
     }
 
     switch(conn->state) {

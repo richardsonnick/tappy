@@ -437,6 +437,8 @@ size_t tcp_ip_to_buf(const tcp_ip_t* tcp_ip, uint8_t* buf) {
 
 void simple_send_flag(const tcp_connection_t* conn, tcp_flag_bits_t flags) {
     tcp_ip_t* tcp_ip = make_packet(conn->tcb, flags);
+    printf("Sending TCP Packet: ");
+    print_tcp_packet(tcp_ip->tcp_packet);
     // TODO: track a single socket for entire process.
     const size_t total_packet_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE;
     send_tcp_ip(tcp_ip, total_packet_len);

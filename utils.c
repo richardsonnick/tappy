@@ -38,7 +38,53 @@ void print_tcp_packet(const tcp_packet_t* packet) {
     printf("    acknowledgment_number: %u\n", packet->acknowledgment_number);
     printf("    data_offset: %u\n", packet->data_offset);
     printf("    reserved: %u\n", packet->reserved);
-    printf("    flags: %02x\n", packet->flags);
+    
+    // Print flags as readable strings
+    printf("    flags: %02x (", packet->flags);
+    int first_flag = 1;
+    if (packet->flags & TCP_FLAG_FIN) {
+        if (!first_flag) printf("|");
+        printf("FIN");
+        first_flag = 0;
+    }
+    if (packet->flags & TCP_FLAG_SYN) {
+        if (!first_flag) printf("|");
+        printf("SYN");
+        first_flag = 0;
+    }
+    if (packet->flags & TCP_FLAG_RST) {
+        if (!first_flag) printf("|");
+        printf("RST");
+        first_flag = 0;
+    }
+    if (packet->flags & TCP_FLAG_PSH) {
+        if (!first_flag) printf("|");
+        printf("PSH");
+        first_flag = 0;
+    }
+    if (packet->flags & TCP_FLAG_ACK) {
+        if (!first_flag) printf("|");
+        printf("ACK");
+        first_flag = 0;
+    }
+    if (packet->flags & TCP_FLAG_URG) {
+        if (!first_flag) printf("|");
+        printf("URG");
+        first_flag = 0;
+    }
+    if (packet->flags & TCP_FLAG_ECE) {
+        if (!first_flag) printf("|");
+        printf("ECE");
+        first_flag = 0;
+    }
+    if (packet->flags & TCP_FLAG_CWR) {
+        if (!first_flag) printf("|");
+        printf("CWR");
+        first_flag = 0;
+    }
+    if (first_flag) printf("NONE");
+    printf(")\n");
+    
     printf("    window: %u\n", packet->window);
     printf("    checksum: %04x\n", packet->checksum);
     printf("    urgent_pointer: %u\n", packet->urgent_pointer);
