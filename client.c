@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "state_machine.h"
 #include "types.h"
 #include <stdlib.h>
 #include "utils.h"
@@ -47,8 +48,17 @@ void client_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip,
 
     conn->state = client_handle_event(conn, OPEN, NULL);
 
+    // TESTING
+    bool sent_data = 0;
     // LISTENing loop
     while (1) {
+
+        if (conn->state == ESTABLISHED && !sent_data) {
+          const char* test_data = "Hey man";
+          simple_send(conn, TCP_FLAG_PSH | TCP_FLAG_SYN ,(const uint8_t*)test_data, strlen(test_data));
+          sent_data = 1;
+        }
+
         // TODO: Make this read op a callback.
         ssize_t buf_len = recvfrom(sockfd, buf, sizeof(buf), 0,
                             (struct sockaddr*)&sender_addr, &sender_len);

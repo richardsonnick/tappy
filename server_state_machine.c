@@ -41,7 +41,7 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
         case(LISTEN):
             if (event == RECEIVE && packet->flags == TCP_FLAG_SYN) { 
                 printf("SYN_RECEIVED\n");
-                simple_send_flag(conn, TCP_FLAG_SYN | TCP_FLAG_ACK);
+                simple_send(conn, TCP_FLAG_SYN | TCP_FLAG_ACK, NULL, 0);
                 return SYN_RECEIVED;
             }
             break;
@@ -49,7 +49,7 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
             if (event == RECEIVE && packet->flags == TCP_FLAG_SYN) {
                 return SYN_RECEIVED;
             } else if (event == RECEIVE && ((packet->flags == TCP_FLAG_SYN) | TCP_FLAG_ACK)) {
-                simple_send_flag(conn, TCP_FLAG_ACK);
+                simple_send(conn, TCP_FLAG_ACK, NULL, 0);
                 printf("Sent ACK to complete handshake\n");
                 return ESTABLISHED;
             }
@@ -62,7 +62,7 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
             }
             else if (event == CLOSE) {
                 // send FIN
-                simple_send_flag(conn, TCP_FLAG_FIN);
+                simple_send(conn, TCP_FLAG_FIN, NULL, 0);
                 return FIN_WAIT_1;
             } 
             break;
@@ -71,7 +71,7 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
                 return CLOSE_WAIT;
             } else if (event == CLOSE) {
                 // SEND FIN
-                simple_send_flag(conn, TCP_FLAG_FIN);
+                simple_send(conn, TCP_FLAG_FIN, NULL, 0);
                 printf("Sent FIN\n");
                 return FIN_WAIT_1;
             }
@@ -86,7 +86,7 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
         case(FIN_WAIT_2):
             if (event == RECEIVE && packet->flags == TCP_FLAG_FIN) {
                 // SEND ack
-                simple_send_flag(conn, TCP_FLAG_ACK);
+                simple_send(conn, TCP_FLAG_ACK, NULL, 0);
                 printf("Sent ACK");
                 return TIME_WAIT;
             }

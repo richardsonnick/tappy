@@ -529,8 +529,8 @@ void process_received_packet(tcb_t* tcb, tcp_packet_t* received_packet) {
 }
 
 
-void simple_send_flag(const tcp_connection_t* conn, tcp_flag_bits_t flags) {
-    tcp_ip_t* tcp_ip = make_packet(conn->tcb, flags, NULL, 0);
+void simple_send(const tcp_connection_t* conn, tcp_flag_bits_t flags, const uint8_t* data, const size_t data_len) {
+    tcp_ip_t* tcp_ip = make_packet(conn->tcb, flags, data, data_len);
     printf("Sending TCP Packet: ");
     print_tcp_packet(tcp_ip->tcp_packet);
     const size_t total_packet_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE;

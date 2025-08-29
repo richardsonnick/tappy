@@ -47,7 +47,7 @@ TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
             if (event == OPEN) {
                 printf("Got OPEN from CLOSED state!!\n");
                 // Passive OPEN (listen for syn)
-                simple_send_flag(conn, TCP_FLAG_SYN);
+                simple_send(conn, TCP_FLAG_SYN, NULL, 0);
                 return SYN_SENT;
             }
             break;
@@ -64,7 +64,7 @@ TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
             } else if (event == RECEIVE && packet->flags == TCP_FLAG_SYN | TCP_FLAG_ACK) {
                 printf("Got SYN,ACK from SYN_SENT state!\n");
                 process_received_packet(conn->tcb, tcp_ip->tcp_packet);
-                simple_send_flag(conn, TCP_FLAG_ACK);
+                simple_send(conn, TCP_FLAG_ACK, NULL, 0);
                 printf("Sent ACK to complete handshake\n");
                 return ESTABLISHED;
             }
