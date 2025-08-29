@@ -28,7 +28,7 @@ TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
     }
 
     if (packet != NULL) {
-        printf("TCP Packet Flags: ");
+        printf("RECEIVED TCP Packet Flags: ");
         if (packet->flags & TCP_FLAG_FIN) printf("FIN ");
         if (packet->flags & TCP_FLAG_SYN) printf("SYN ");
         if (packet->flags & TCP_FLAG_RST) printf("RST ");
