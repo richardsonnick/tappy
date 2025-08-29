@@ -19,13 +19,6 @@ void do_write(const tcp_ip_t* tcp_ip, int netdev_fd) {
     write_to_dev(netdev_fd, buf, total_packet_len);
 }
 
-void syn(const tcp_connection_t* conn) {
-    tcp_ip_t* tcp_ip = make_packet(conn->tcb, TCP_FLAG_SYN);
-    // TODO: track a single socket for entire process.
-    const size_t total_packet_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE;
-    send_tcp_ip(tcp_ip, total_packet_len);
-}
-
 // TODO: There are parts here where i should check for ack of something rather than just ack.
 TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp_packet_t* packet) {
     switch(conn->state) {
@@ -33,7 +26,7 @@ TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
             if (event == OPEN) {
                 printf("Got OPEN from CLOSED state!!\n");
                 // Passive OPEN (listen for syn)
-                syn(conn);
+                simple_send_flag(conn, TCP_FLAG_SYN);
                 return SYN_SENT;
             }
             break;

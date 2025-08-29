@@ -9,6 +9,7 @@
 #include "utils.h"
 
 #include "tcp.h"
+#include "io.h"
 
 tcp_connection_t* init_tcp_stack(ip_addr_t* source_ip, ip_addr_t* destination_ip,
                     const uint16_t source_port, const uint16_t destination_port, TCP_STATE init_state) {
@@ -431,4 +432,12 @@ size_t tcp_ip_to_buf(const tcp_ip_t* tcp_ip, uint8_t* buf) {
         tcp_ip->ip_header->total_length - MIN_IP4_HEADER_SIZE // could be issue
     ); 
     return bytes_written_ip + bytes_written_tcp;
+}
+
+
+void simple_send_flag(const tcp_connection_t* conn, tcp_flag_bits_t flags) {
+    tcp_ip_t* tcp_ip = make_packet(conn->tcb, flags);
+    // TODO: track a single socket for entire process.
+    const size_t total_packet_len = MIN_IP4_HEADER_SIZE + MIN_TCP_PACKET_SIZE;
+    send_tcp_ip(tcp_ip, total_packet_len);
 }
