@@ -1,5 +1,5 @@
 tappy
 *.o
 settings.json
-.vscode
+.vscode/
 *.swp
