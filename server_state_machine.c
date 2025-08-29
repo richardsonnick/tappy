@@ -4,6 +4,7 @@
 #include "server_state_machine.h"
 #include "tcp.h"
 #include "io.h"
+#include "types.h"
 
 void server_teardown(tcp_connection_t* conn) {
     free(conn->tcb);
@@ -31,6 +32,7 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
             if (event == RECEIVE && packet->flags == TCP_FLAG_SYN) { 
                 // TODO: send syn, ack
                 printf("SYN_RECEIVED\n");
+                simple_send_flag(conn, TCP_FLAG_SYN | TCP_FLAG_ACK);
                 return SYN_RECEIVED;
             }
             break;

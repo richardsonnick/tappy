@@ -32,6 +32,7 @@ TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
             break;
         case(LISTEN):
             if (event == RECEIVE && packet->flags == TCP_FLAG_SYN) { 
+                printf("Got RECEIVE from LISTEN state!!\n");
                 // TODO: send syn, ack
                 return SYN_RECEIVED;
             }
