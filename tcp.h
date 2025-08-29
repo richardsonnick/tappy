@@ -27,6 +27,8 @@ bool ip_buf_to_packet(const uint8_t* buf, size_t len, ip_header_t* out_packet);
 bool tcp_buf_to_packet(const uint8_t* buf, size_t len, tcp_packet_t* out_packet);
 size_t tcp_ip_to_buf(const tcp_ip_t* tcp_ip, uint8_t* buf);
 
+void process_received_packet(tcb_t* tcb, tcp_packet_t* received_packet);
+
 void simple_send_flag(const tcp_connection_t* conn, tcp_flag_bits_t flags);
 
 #endif

@@ -26,7 +26,9 @@ TCP_STATE server_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
     if (packet != NULL) {
         printf("RECEIVED TCP Packet: \n");
         print_tcp_packet(tcp_ip->tcp_packet);
+        process_received_packet(conn->tcb, tcp_ip->tcp_packet);
     }
+
 
     switch(conn->state) {
         case(CLOSED):

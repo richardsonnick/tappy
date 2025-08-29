@@ -33,7 +33,14 @@ TCP_STATE client_handle_event(tcp_connection_t* conn, TCP_EVENT event, const tcp
     if (packet != NULL) {
         printf("RECEIVED TCP Packet: \n");
         print_tcp_packet(tcp_ip->tcp_packet);
+        process_received_packet(conn->tcb, tcp_ip->tcp_packet);
+        // For debugging. I assume the final version should not ignore kernel RST packets.
+        if (packet->flags & TCP_FLAG_RST) {
+          printf("\tIgnoring RST packet from kernel\n");
+          return conn->state;
+        }
     }
+
 
     switch(conn->state) {
         case(CLOSED):

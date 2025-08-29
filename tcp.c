@@ -89,6 +89,7 @@ tcp_connection_t* init_tcp_stack(ip_addr_t* source_ip, ip_addr_t* destination_ip
     tcb->source_port = source_port;
     tcb->destination_port = destination_port;
     tcb->seq_num = generate_isn(tcb);
+    tcb->ack_num = 0;
 
     conn->tcb = tcb;
 
@@ -121,7 +122,7 @@ tcp_ip_t* make_packet(const tcb_t* tcb, const uint8_t flags) {
         tcp_ip->tcp_packet->source_port = tcb->source_port;
         tcp_ip->tcp_packet->destination_port = tcb->destination_port;
         tcp_ip->tcp_packet->sequence_number = tcb->seq_num;
-        tcp_ip->tcp_packet->acknowledgment_number = 0x00;
+        tcp_ip->tcp_packet->acknowledgment_number = tcb->ack_num;
         tcp_ip->tcp_packet->data_offset = (MIN_TCP_PACKET_SIZE / 4); // data offset in 4 byte words (words == 32 bits)
         tcp_ip->tcp_packet->reserved = 0x00;
         tcp_ip->tcp_packet->flags = flags;
@@ -505,6 +506,14 @@ void update_sequence_number(tcb_t* tcb, tcp_flag_bits_t flags, size_t data_len) 
   }
 
   tcb->seq_num += data_len;
+}
+
+void process_received_packet(tcb_t* tcb, tcp_packet_t* received_packet) {
+  if (received_packet->flags & TCP_FLAG_SYN) {
+    tcb->ack_num = received_packet->sequence_number + 1;
+  } else {
+    tcb->ack_num = received_packet->sequence_number + received_packet->data_len;
+  }
 }
 
 
