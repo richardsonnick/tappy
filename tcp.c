@@ -417,7 +417,7 @@ bool tcp_buf_to_packet(const uint8_t* buf, size_t len, tcp_packet_t* out_packet)
     uint8_t header_len = out_packet->data_offset * 4;
 
     if (i < len) {
-        out_packet->data_len = len = i;
+        out_packet->data_len = len - i;
         if (out_packet->data_len > 0) {
             uint8_t* data_copy = malloc(out_packet->data_len);
             if (data_copy) {

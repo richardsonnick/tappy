@@ -46,7 +46,7 @@ void server_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip,
         tcp_ip->ip_header = malloc(sizeof(ip_header_t));
         tcp_ip->tcp_packet = malloc(sizeof(tcp_packet_t));
         ip_buf_to_packet(buf, 20, tcp_ip->ip_header);
-        size_t tcp_len = tcp_ip->ip_header->total_length - MIN_IP4_HEADER_SIZE;
+        size_t tcp_len = buf_len - MIN_IP4_HEADER_SIZE;  
         tcp_buf_to_packet(buf + 20, tcp_len, tcp_ip->tcp_packet);
 
         // The condition here is prob unneccsary i imagine the kernel does this for me.
