@@ -90,7 +90,7 @@ void print_tcp_packet(const tcp_packet_t* packet) {
     printf("    urgent_pointer: %u\n", packet->urgent_pointer);
     // ... data
     if (packet->data && packet->data_len > 0) {
-        printf("    data_len: %d\n", packet->data_len);
+        printf("    data_len: %ld\n", packet->data_len);
         printf("    data (hex): ");
         for (size_t i = 0; i < packet->data_len; i++) {
             printf("%02x ", packet->data[i]);
