@@ -190,3 +190,27 @@ const char* tcp_state_to_string(TCP_STATE state) {
 void print_conn(const tcp_connection_t* conn, const char* context) {
     printf("%s - Current state: %s\n", context, tcp_state_to_string(conn->state));
 }
+
+void write_u32_be(uint8_t* buf, uint32_t val) {
+    buf[0] = (val >> 24);
+    buf[1] = (val >> 16) & 0xFF; 
+    buf[2] = (val >> 8) & 0xFF; 
+    buf[3] = (val & 0x00FF); 
+}
+
+void write_u16_be(uint8_t* buf, uint32_t val) {
+    buf[0] = (val >> 8) & 0xFF;
+    buf[1] = (val & 0x00FF);
+}
+
+uint32_t read_u32_be(const uint8_t* buf) {
+    return ((uint32_t)buf[0] << 24) |
+            ((uint32_t)buf[1] << 16) |
+            ((uint32_t)buf[2] << 8)  |
+            ((uint32_t)buf[3]);
+}
+
+uint16_t read_u16_be(const uint8_t* buf) {
+    return ((uint16_t)buf[0] << 8) |
+           ((uint16_t)buf[1]);
+}

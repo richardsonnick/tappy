@@ -259,37 +259,33 @@ size_t ip_header_to_buf(const ip_header_t* packet, uint8_t* buf, size_t buf_len)
     buf[i++] = ((packet->version & 0x0f) << 4) | (packet->ihl & 0x0F);
     buf[i++] = packet->type_of_service;
 
-    uint16_t total_length = packet->total_length;
-    buf[i++] = (total_length >> 8);
-    buf[i++] = (total_length & 0xFF);
+    write_u16_be(buf + i, packet->total_length);
+    i += 2;
 
-    uint16_t identification = packet->identification;
-    buf[i++] = (identification >> 8);
-    buf[i++] = (identification & 0xFF); 
+    write_u16_be(buf + i, packet->identification);
+    i += 2;
 
     uint16_t flags_fragment = ((packet-> flags & 0x7) << 13) | (packet->fragment_offset & 0x1FFF);
     flags_fragment = flags_fragment;
-    buf[i++] = flags_fragment >> 8;
-    buf[i++] = flags_fragment & 0xFF;
+    write_u16_be(buf + i, flags_fragment);
+    i += 2;
 
-    buf[i++] = packet->time_to_live;
-    buf[i++] = packet->protocol;
+    buf[i] = packet->time_to_live;
+    i++;
+    buf[i] = packet->protocol;
+    i++;
 
     uint16_t header_checksum = packet->header_checksum;
-    buf[i++] = (header_checksum >> 8);
-    buf[i++] = (header_checksum & 0xFF); 
+    write_u16_be(buf + i, header_checksum);
+    i += 2;
 
     uint32_t source_address = packet->source_address;
-    buf[i++] = (source_address >> 24);
-    buf[i++] = (source_address >> 16) & 0xFF; 
-    buf[i++] = (source_address >> 8) & 0xFF; 
-    buf[i++] = (source_address & 0x00FF); 
+    write_u32_be(buf + i, source_address);
+    i += 4;
 
     uint32_t destination_address = packet->destination_address;
-    buf[i++] = (destination_address >> 24);
-    buf[i++] = (destination_address >> 16) & 0xFF; 
-    buf[i++] = (destination_address >> 8) & 0xFF; 
-    buf[i++] = (destination_address & 0x00FF); 
+    write_u32_be(buf + i, destination_address);
+    i += 4;
 
     return i;
 }
@@ -303,29 +299,22 @@ bool ip_buf_to_packet(const uint8_t* buf, size_t len, ip_header_t* out_packet) {
     out_packet->ihl = (buf[i] & 0x0F); // ihl
     i++;
     out_packet->type_of_service = buf[i++];
-    out_packet->total_length = ((uint16_t)buf[i++] << 8); 
-    out_packet->total_length = (((uint16_t)buf[i++] & 0x00FF) | out_packet->total_length); 
-    out_packet->identification = ((uint16_t)buf[i++] << 8); 
-    out_packet->identification = (((uint16_t)buf[i++] & 0x00FF) | out_packet->identification); 
+    out_packet->total_length = read_u16_be(buf + i);
+    out_packet->identification = read_u16_be(buf + i);
 
     uint8_t flag_fragment1 = buf[i++];
     uint8_t flag_fragment2 = buf[i++];
     out_packet->flags = (((uint8_t) flag_fragment1 >> 5));
     out_packet->fragment_offset = (((uint16_t) flag_fragment1 & 0x1F) << 8)
                                 | ((uint16_t) flag_fragment2);
-
     out_packet->time_to_live = buf[i++];
     out_packet->protocol = buf[i++];
-    out_packet->header_checksum = ((uint16_t)buf[i++] << 8); 
-    out_packet->header_checksum = (((uint16_t)buf[i++] & 0x00FF) | out_packet->header_checksum); 
-    out_packet->source_address = (((uint32_t) buf[i++]) << 24)
-                                | ((uint32_t) buf[i++] << 16)
-                                | ((uint32_t) buf[i++] << 8)
-                                | ((uint32_t) buf[i++]);
-    out_packet->destination_address = (((uint32_t) buf[i++]) << 24)
-                                | ((uint32_t) buf[i++] << 16)
-                                | ((uint32_t) buf[i++] << 8)
-                                | ((uint32_t) buf[i++]);
+    out_packet->header_checksum = read_u16_be(buf + i);
+    i += 2;
+    out_packet->source_address = read_u32_be(buf + i);
+    i += 4;
+    out_packet->destination_address = read_u32_be(buf + i);
+    i += 4;
     return true;
 }
 
@@ -339,19 +328,15 @@ bool tcp_buf_to_packet(const uint8_t* buf, size_t len, tcp_packet_t* out_packet)
     out_packet->source_port = (((uint16_t)buf[i++] & 0x00FF) | out_packet->source_port); 
     out_packet->destination_port = ((uint16_t)buf[i++] << 8); 
     out_packet->destination_port = (((uint16_t)buf[i++] & 0x00FF) | out_packet->destination_port); 
-    out_packet->sequence_number = (((uint32_t) buf[i++]) << 24)
-                                | ((uint32_t) buf[i++] << 16)
-                                | ((uint32_t) buf[i++] << 8)
-                                | ((uint32_t) buf[i++]);
-    out_packet->acknowledgment_number = (((uint32_t) buf[i++]) << 24)
-                                | ((uint32_t) buf[i++] << 16)
-                                | ((uint32_t) buf[i++] << 8)
-                                | ((uint32_t) buf[i++]);
+    out_packet->sequence_number = read_u32_be(buf + i);
+    i += 4;
+    out_packet->acknowledgment_number = read_u32_be(buf + i);
+    i += 4;
     out_packet->data_offset = buf[i] >> 4;
     out_packet->reserved = buf[i++] & 0x0F;
     out_packet->flags = buf[i++];
-    out_packet->window = ((uint16_t)buf[i++] << 8); 
-    out_packet->window = (((uint16_t)buf[i++] & 0x00FF) | out_packet->window); 
+    out_packet->window = read_u16_be(buf + i);
+    i += 2;
     out_packet->checksum = ((uint16_t)buf[i++] << 8); 
     out_packet->checksum = (((uint16_t)buf[i++] & 0x00FF) | out_packet->checksum); 
     out_packet->urgent_pointer = ((uint16_t)buf[i++] << 8); 

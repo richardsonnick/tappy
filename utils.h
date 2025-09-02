@@ -25,4 +25,9 @@ void print_tcp_packet(const tcp_packet_t* packet);
 const char* tcp_state_to_string(TCP_STATE state);
 void print_conn(const tcp_connection_t* conn, const char* context);
 
+void write_u32_be(uint8_t* buf, uint32_t val);
+void write_u16_be(uint8_t* buf, uint32_t val);
+uint32_t read_u32_be(const uint8_t* buf);
+uint16_t read_u16_be(const uint8_t* buf);
+
 #endif // UTILS_H
