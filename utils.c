@@ -107,7 +107,7 @@ void print_raw_buf(const uint8_t* buf, const size_t buf_len) {
     // Assuming the buf starts with the ip header:
     uint8_t ip_header_len = ((uint16_t)buf[0] & 0x0F) * 4;  // ihl repr num of 32 bit (4 byte) words 
     printf("IP header len: %d\n", ip_header_len);
-    for (int i = 0; i < buf_len; i++) {
+    for (size_t i = 0; i < buf_len; i++) {
         if (i < ip_header_len) {
             // Use green color
             printf(COLOR_GREEN "%02x " COLOR_RESET, buf[i]);
