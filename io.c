@@ -34,7 +34,13 @@ void send_tcp_ip(tcp_ip_t* tcp_ip, const size_t total_packet_len) {
     uint8_t* buf = malloc(total_packet_len);
     tcp_ip_to_buf(tcp_ip, buf);
     print_raw_buf(buf, total_packet_len);
-    send_packet_raw(sockfd, buf, total_packet_len, "192.168.1.130");
+    
+    ip_addr_t dest_ip = from_ip_encoding(tcp_ip->ip_header->destination_address);
+    char dest_ip_str[16];
+    snprintf(dest_ip_str, sizeof(dest_ip_str), "%d.%d.%d.%d", 
+             dest_ip.a, dest_ip.b, dest_ip.c, dest_ip.d);
+    
+    send_packet_raw(sockfd, buf, total_packet_len, dest_ip_str);
     close(sockfd);
     free(buf);
 }
