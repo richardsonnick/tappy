@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
+#include <stdbool.h>
 #include "io.h"
 #include "client_state_machine.h"
 
@@ -21,7 +22,7 @@
 // TODO make this loop common bw server and client
 void client_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip, 
     int src_port,
-    int dst_port) {
+    int dst_port, bool pipe_mode) {
     printf("Running client...\n");
     int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
     if (sockfd < 0) {
@@ -39,15 +40,48 @@ void client_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip,
 
     conn->state = client_handle_event(conn, OPEN, NULL);
 
-    // TESTING
     bool sent_data = 0;
+    char* stdin_buffer = NULL;
+    size_t stdin_buffer_size = 0;
+    ssize_t stdin_data_len = 0;
+    
+    if (pipe_mode) {
+        stdin_buffer_size = 4096;
+        stdin_buffer = malloc(stdin_buffer_size);
+        size_t total_read = 0;
+        ssize_t bytes_read;
+        
+        while ((bytes_read = read(STDIN_FILENO, stdin_buffer + total_read, stdin_buffer_size - total_read - 1)) > 0) {
+            total_read += bytes_read;
+            if (total_read >= stdin_buffer_size - 1) {
+                // Resize buffer if needed
+                stdin_buffer_size *= 2;
+                stdin_buffer = realloc(stdin_buffer, stdin_buffer_size);
+            }
+        }
+        stdin_buffer[total_read] = '\0';  // Null terminate
+        stdin_data_len = total_read;
+        
+        if (stdin_data_len == 0) {
+            free(stdin_buffer);
+            close(sockfd);
+            return;
+        }
+    }
+
     // LISTENing loop
     while (1) {
 
         if (conn->state == ESTABLISHED && !sent_data) {
-          const char* test_data = "Hey man";
-          printf("Sending data: %s\n", test_data);
-          simple_send(conn, TCP_FLAG_PSH | TCP_FLAG_SYN ,(const uint8_t*)test_data, strlen(test_data));
+            if (pipe_mode && stdin_buffer) {
+                printf("Sending piped data (%ld bytes)\n", stdin_data_len);
+                simple_send(conn, TCP_FLAG_PSH | TCP_FLAG_ACK, (const uint8_t*)stdin_buffer, stdin_data_len);
+            } else {
+                // Default test data when not in pipe mode
+                const char* test_data = "Hey man";
+                printf("Sending data: %s\n", test_data);
+                simple_send(conn, TCP_FLAG_PSH | TCP_FLAG_SYN ,(const uint8_t*)test_data, strlen(test_data));
+            }
           sent_data = 1;
         }
 
@@ -88,6 +122,12 @@ void client_loop(ip_addr_t* source_ip, ip_addr_t* destination_ip,
         free(tcp_ip->tcp_packet);
         free(tcp_ip);
     }
+    
+    // Clean up stdin buffer if it was allocated
+    if (pipe_mode && stdin_buffer) {
+        free(stdin_buffer);
+    }
+    
     close(sockfd);
 
 }
